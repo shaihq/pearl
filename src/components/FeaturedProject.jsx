@@ -16,7 +16,7 @@ export default function FeaturedProject() {
     >
       <motion.div
         variants={revealRL}
-        className="group cursor-none rounded-2xl bg-panel dark:bg-zinc-900 h-[360px] flex items-center justify-center px-8 overflow-hidden transition-colors duration-500"
+        className="group cursor-none rounded-2xl bg-[var(--card)] h-[360px] flex items-center justify-center px-8 overflow-hidden transition-colors duration-500"
         onMouseEnter={show}
         onMouseLeave={hide}
       >
@@ -25,8 +25,8 @@ export default function FeaturedProject() {
         </div>
       </motion.div>
       <motion.div variants={revealRL} className="mt-4 flex flex-col gap-0.5">
-        <p className="text-xs text-neutral-500 dark:text-zinc-400">Booking Corp.</p>
-        <p className="text-sm font-medium text-ink dark:text-white">Fintech Dello Banking App</p>
+        <p className="text-xs text-[var(--muted)]">Booking Corp.</p>
+        <p className="text-sm font-medium text-[var(--primary)]">Fintech Dello Banking App</p>
       </motion.div>
     </motion.section>
   )

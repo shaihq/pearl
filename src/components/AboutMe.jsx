@@ -14,7 +14,7 @@ export default function AboutMe() {
   return (
     <>
       <motion.section
-        className="py-14 flex flex-col sm:flex-row gap-8 sm:gap-16 border-t border-neutral-200 dark:border-zinc-800"
+        className="py-14 flex flex-col sm:flex-row gap-8 sm:gap-16 border-t border-[var(--border)]"
         variants={revealContainer}
         initial="hidden"
         whileInView="visible"
@@ -22,7 +22,7 @@ export default function AboutMe() {
       >
         <motion.h2
           variants={revealRL}
-          className="text-2xl sm:text-3xl font-medium tracking-tight text-ink dark:text-white sm:w-56 shrink-0"
+          className="text-2xl sm:text-3xl font-medium tracking-tight text-[var(--primary)] sm:w-56 shrink-0"
         >
           About me
         </motion.h2>
@@ -30,7 +30,7 @@ export default function AboutMe() {
         <div className="flex-1 flex flex-col gap-5 max-w-2xl">
           <motion.p
             variants={revealRL}
-            className="text-lg sm:text-xl leading-relaxed text-ink dark:text-white"
+            className="text-lg sm:text-xl leading-relaxed text-[var(--primary)]"
           >
             I'm a dedicated product designer with a passion for creating fun and intuitive
             experiences. Over the last 7 years I've worked across many industries — from mobile
@@ -40,7 +40,7 @@ export default function AboutMe() {
 
           <motion.p
             variants={revealRL}
-            className="text-base leading-relaxed text-neutral-500 dark:text-zinc-400"
+            className="text-base leading-relaxed text-[var(--muted)]"
           >
             My approach is grounded in research and collaboration. I believe the best results come
             from understanding the end-user and working closely with the team, with clear
@@ -49,7 +49,7 @@ export default function AboutMe() {
 
           <motion.p
             variants={revealRL}
-            className="text-base leading-relaxed text-neutral-500 dark:text-zinc-400"
+            className="text-base leading-relaxed text-[var(--muted)]"
           >
             Outside of work, I enjoy staying up to date with the latest design trends and tools —
             I'm always learning, which helps me bring fresh ideas to every project.

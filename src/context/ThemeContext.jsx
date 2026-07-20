@@ -12,7 +12,7 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(getInitialTheme)
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
+    document.documentElement.setAttribute('data-theme', theme)
     document.documentElement.style.colorScheme = theme
     window.localStorage.setItem('theme', theme)
   }, [theme])

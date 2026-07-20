@@ -1,6 +1,6 @@
 export default function HealthcareCard() {
   return (
-    <div className="rounded-2xl bg-panel dark:bg-zinc-900 h-[340px] flex items-center justify-center overflow-hidden transition-colors duration-500">
+    <div className="rounded-2xl bg-[var(--card)] h-[340px] flex items-center justify-center overflow-hidden transition-colors duration-500">
       <div className="w-[150px] rounded-xl bg-white shadow-xl p-3 text-[9px] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110">
         <div className="flex items-center justify-between mb-3">
           <span className="font-medium text-ink text-[10px]">Summary</span>

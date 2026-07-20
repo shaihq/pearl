@@ -43,7 +43,7 @@ export default function ThemeToggle() {
       onClick={toggleTheme}
       aria-label="Toggle color mode"
       aria-pressed={isDark}
-      className="relative w-10 h-10 shrink-0 rounded-full border border-neutral-200 dark:border-zinc-800 flex items-center justify-center text-ink dark:text-white hover:bg-neutral-100 dark:hover:bg-zinc-900 transition-colors"
+      className="relative w-10 h-10 shrink-0 rounded-full border border-[var(--secondary-border)] flex items-center justify-center text-[var(--primary)] hover:bg-[var(--secondary)] transition-colors"
     >
       <SunIcon
         className={`w-[18px] h-[18px] absolute transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${

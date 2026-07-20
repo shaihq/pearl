@@ -1,9 +1,9 @@
 export default function InfographicCard() {
   return (
-    <div className="rounded-2xl bg-panel dark:bg-zinc-900 h-[340px] flex items-center justify-center overflow-hidden transition-colors duration-500">
+    <div className="rounded-2xl bg-[var(--card)] h-[340px] flex items-center justify-center overflow-hidden transition-colors duration-500">
       <svg
         viewBox="0 0 200 140"
-        className="w-44 h-32 text-neutral-400 dark:text-zinc-500 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110"
+        className="w-44 h-32 text-[var(--muted)] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110"
         fill="none"
         stroke="currentColor"
         strokeWidth="1"

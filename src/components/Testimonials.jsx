@@ -42,7 +42,7 @@ function Avatar({ name }) {
     .join('')
 
   return (
-    <span className="w-9 h-9 shrink-0 rounded-full bg-neutral-100 dark:bg-zinc-800 flex items-center justify-center text-xs font-semibold text-ink dark:text-white">
+    <span className="w-9 h-9 shrink-0 rounded-full bg-[var(--secondary)] flex items-center justify-center text-xs font-semibold text-[var(--primary)]">
       {initials}
     </span>
   )
@@ -66,16 +66,16 @@ export default function Testimonials() {
       >
         <motion.p
           variants={revealRL}
-          className="[grid-area:label] text-xs text-neutral-500 dark:text-zinc-400 pb-3 border-b border-neutral-200 dark:border-zinc-800"
+          className="[grid-area:label] text-xs text-[var(--muted)] pb-3 border-b border-[var(--border)]"
         >
           Testimonials
         </motion.p>
 
         <motion.div
           variants={revealRL}
-          className="[grid-area:counter] flex items-end sm:items-start justify-start sm:justify-end pb-3 border-b border-neutral-200 dark:border-zinc-800"
+          className="[grid-area:counter] flex items-end sm:items-start justify-start sm:justify-end pb-3 border-b border-[var(--border)]"
         >
-          <span className="text-xs text-neutral-400 dark:text-zinc-500">
+          <span className="text-xs text-[var(--muted)]">
             {active + 1} / {testimonials.length}
           </span>
         </motion.div>
@@ -88,7 +88,7 @@ export default function Testimonials() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.45, ease: EASE }}
-              className="text-2xl sm:text-3xl font-medium leading-snug tracking-tight text-ink dark:text-white"
+              className="text-2xl sm:text-3xl font-medium leading-snug tracking-tight text-[var(--primary)]"
             >
               "{testimonials[active].quote}"
             </motion.p>
@@ -109,7 +109,7 @@ export default function Testimonials() {
                   <div>
                     <p
                       className={`text-sm font-medium transition-colors ${
-                        isActive ? 'text-ink dark:text-white' : 'text-neutral-400 dark:text-zinc-600'
+                        isActive ? 'text-[var(--primary)]' : 'text-[var(--muted)]'
                       }`}
                     >
                       {item.name}
@@ -123,8 +123,8 @@ export default function Testimonials() {
                           transition={{ duration: 0.35, ease: EASE }}
                           className="overflow-hidden"
                         >
-                          <p className="text-xs text-neutral-500 dark:text-zinc-400 mt-1">{item.role}</p>
-                          <p className="text-xs text-neutral-500 dark:text-zinc-400">{item.company}</p>
+                          <p className="text-xs text-[var(--muted)] mt-1">{item.role}</p>
+                          <p className="text-xs text-[var(--muted)]">{item.company}</p>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -144,7 +144,7 @@ export default function Testimonials() {
                   </AnimatePresence>
                 </button>
 
-                <div className="h-px bg-neutral-200 dark:bg-zinc-800" />
+                <div className="h-px bg-[var(--border)]" />
 
                 {isActive && (
                   <motion.div
@@ -153,7 +153,7 @@ export default function Testimonials() {
                     animate={{ width: '100%' }}
                     transition={{ duration: DURATION, ease: 'linear' }}
                     onAnimationComplete={goToNext}
-                    className="absolute bottom-0 left-0 h-px bg-ink dark:bg-white"
+                    className="absolute bottom-0 left-0 h-px bg-[var(--primary)]"
                   />
                 )}
               </div>

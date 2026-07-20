@@ -34,8 +34,8 @@ export default function ProjectGrid() {
         >
           <Card />
           <div className="mt-4 flex flex-col gap-0.5">
-            <p className="text-xs text-neutral-500 dark:text-zinc-400">{client}</p>
-            <p className="text-sm font-medium text-ink dark:text-white">{title}</p>
+            <p className="text-xs text-[var(--muted)]">{client}</p>
+            <p className="text-sm font-medium text-[var(--primary)]">{title}</p>
           </div>
         </motion.div>
       ))}

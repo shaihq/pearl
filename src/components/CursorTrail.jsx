@@ -52,7 +52,8 @@ export default function CursorTrail() {
       points.push({ x: ball.x, y: ball.y })
       if (points.length > MAX_POINTS) points.shift()
 
-      const color = document.documentElement.classList.contains('dark') ? '255, 255, 255' : '10, 10, 10'
+      const color =
+        document.documentElement.getAttribute('data-theme') === 'dark' ? '255, 255, 255' : '10, 10, 10'
 
       for (let i = 1; i < points.length; i++) {
         const p0 = points[i - 1]

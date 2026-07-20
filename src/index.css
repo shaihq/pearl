@@ -2,6 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens
+ * -------------
+ * Every color used across the site, extracted from its Tailwind utility
+ * class. Reference these via arbitrary-value classes, e.g. bg-[var(--card)],
+ * text-[var(--muted)] — no dark: variant needed, the value itself swaps
+ * automatically when [data-theme="dark"] is set on <html>.
+ *
+ * Two tokens go beyond the requested schema (noted inline below):
+ * --surface-strong (Footer / NavDrawer's always-dark surface, which pairs
+ * ink<->zinc-900 rather than matching --primary's or --card's pairing) and
+ * the fact that --primary doubles as the site's main heading/emphasis TEXT
+ * color (not just a button background) — this project has no separate
+ * "foreground" token; ink/white already served both roles before this
+ * refactor.
+ *
+ * Tokens with no current real usage (--sidebar*, --ring, --tiptap-*) are
+ * aliased to their closest semantic match and commented as unused, kept
+ * only for schema completeness.
+ */
+:root {
+  --background: #ffffff; /* bg-white */
+  --card: #e4e5ea; /* bg-panel (custom Tailwind color) */
+  --secondary: #f5f5f5; /* bg-neutral-100 */
+  --secondary-hover: #e5e5e5; /* bg-neutral-200 */
+  --secondary-border: #e5e5e5; /* border-neutral-200 */
+  --secondary-border-hover: #d4d4d4; /* border-neutral-300 (not currently used — no component changes border color on hover) */
+  --accent: #6366f1; /* bg-indigo-500 (used only inside project-mockup illustrations, e.g. DashboardMockup) */
+  --muted: #737373; /* text-neutral-500 (canonical value; consolidates neutral-400/500/600 variants used loosely before this refactor) */
+  --border: #e5e5e5; /* border-neutral-200 */
+  --sidebar: #e4e5ea; /* not used — no sidebar in this project; aliased to --card */
+  --sidebar-accent: #6366f1; /* not used — no sidebar in this project; aliased to --accent */
+  --primary: #0a0a0a; /* bg-ink / text-ink (also used as the site's main heading/emphasis text color) */
+  --primary-foreground: #ffffff; /* text-white */
+  --primary-hover: #262626; /* hover:bg-neutral-800 */
+  --ring: #0a0a0a; /* not currently implemented — no focus-visible styles yet; aliased to --primary */
+  --sidebar-primary: #0a0a0a; /* not used — no sidebar in this project; aliased to --primary */
+  --sidebar-ring: #0a0a0a; /* not used — no sidebar in this project; aliased to --ring */
+
+  --surface-strong: #0a0a0a; /* bg-ink — Footer/NavDrawer's always-dark surface (extra token, see comment above) */
+
+  /* Tiptap text tokens — not used, no Tiptap/rich-text editor in this project; mapped to base body text color for schema completeness */
+  --tiptap-text: #0a0a0a;
+  --tiptap-work-paragraph: var(--tiptap-text);
+  --tiptap-review-paragraph: var(--tiptap-text);
+  --tiptap-work-list: var(--tiptap-text);
+  --tiptap-review-list: var(--tiptap-text);
+}
+
+[data-theme='dark'] {
+  --background: #09090b; /* bg-zinc-950 */
+  --card: #18181b; /* bg-zinc-900 */
+  --secondary: #27272a; /* bg-zinc-800 */
+  --secondary-hover: #3f3f46; /* bg-zinc-700 (normalized: previously some hovers used zinc-800, others zinc-700, inconsistently) */
+  --secondary-border: #27272a; /* border-zinc-800 */
+  --secondary-border-hover: #3f3f46; /* border-zinc-700 (not currently used) */
+  --accent: #6366f1; /* bg-indigo-500, unchanged across themes */
+  --muted: #a1a1aa; /* text-zinc-400 (canonical value; consolidates zinc-400/500/600 variants) */
+  --border: #27272a; /* border-zinc-800 */
+  --sidebar: #18181b; /* not used — aliased to --card */
+  --sidebar-accent: #6366f1; /* not used — aliased to --accent */
+  --primary: #ffffff; /* bg-white / text-white */
+  --primary-foreground: #0a0a0a; /* text-ink */
+  --primary-hover: #e5e5e5; /* hover:bg-neutral-200 */
+  --sidebar-primary: #ffffff; /* not used — aliased to --primary */
+  --sidebar-ring: #ffffff; /* not used — aliased to --ring (inherited from :root, unchanged) */
+
+  --surface-strong: #18181b; /* bg-zinc-900 */
+
+  /* Tiptap dark tokens — not used, no Tiptap editor in this project */
+  --tiptap-text: #f5f5f5;
+  --tiptap-work-paragraph: var(--tiptap-text);
+  --tiptap-review-paragraph: var(--tiptap-text);
+  --tiptap-work-list: var(--tiptap-text);
+  --tiptap-review-list: var(--tiptap-text);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -14,14 +91,9 @@ body {
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif;
-  background: #ffffff;
-  color: #0a0a0a;
+  background: var(--background);
+  color: var(--primary);
   transition: background-color 0.4s ease, color 0.4s ease;
-}
-
-html.dark body {
-  background: #09090b;
-  color: #f5f5f5;
 }
 
 .view-cursor {

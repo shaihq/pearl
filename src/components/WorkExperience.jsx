@@ -39,7 +39,7 @@ const experiences = [
 
 function CompanyBadge({ name }) {
   return (
-    <span className="w-9 h-9 shrink-0 rounded-full bg-neutral-100 dark:bg-zinc-800 flex items-center justify-center text-xs font-semibold text-ink dark:text-white">
+    <span className="w-9 h-9 shrink-0 rounded-full bg-[var(--secondary)] flex items-center justify-center text-xs font-semibold text-[var(--primary)]">
       {name.slice(0, 2)}
     </span>
   )
@@ -51,7 +51,7 @@ function ExperienceRow({ item, isLast }) {
   return (
     <motion.div
       variants={revealRL}
-      className={isLast ? '' : 'border-b border-neutral-200 dark:border-zinc-800'}
+      className={isLast ? '' : 'border-b border-[var(--border)]'}
     >
       <button
         type="button"
@@ -61,25 +61,25 @@ function ExperienceRow({ item, isLast }) {
       >
         <div className="flex items-center gap-3 sm:w-56 shrink-0">
           <CompanyBadge name={item.company} />
-          <span className="text-sm font-medium text-ink dark:text-white">{item.company}</span>
+          <span className="text-sm font-medium text-[var(--primary)]">{item.company}</span>
         </div>
 
         <div className="flex-1 flex items-center justify-between gap-4">
           <div>
-            <p className="text-xl sm:text-2xl font-medium tracking-tight text-ink dark:text-white">
+            <p className="text-xl sm:text-2xl font-medium tracking-tight text-[var(--primary)]">
               {item.role}
             </p>
-            <p className="sm:hidden text-sm text-neutral-500 dark:text-zinc-400 mt-1">{item.period}</p>
+            <p className="sm:hidden text-sm text-[var(--muted)] mt-1">{item.period}</p>
           </div>
 
           <div className="flex items-center gap-4 shrink-0">
-            <span className="hidden sm:inline text-sm text-neutral-500 dark:text-zinc-400">
+            <span className="hidden sm:inline text-sm text-[var(--muted)]">
               {item.period}
             </span>
             <motion.span
               animate={{ rotate: open ? 180 : 0 }}
               transition={{ duration: 0.3, ease: EASE }}
-              className="text-neutral-400 dark:text-zinc-600 text-lg"
+              className="text-[var(--muted)] text-lg"
             >
               ↓
             </motion.span>
@@ -98,14 +98,14 @@ function ExperienceRow({ item, isLast }) {
             className="overflow-hidden"
           >
             <div className="pb-6 sm:pl-56 max-w-2xl">
-              <p className="text-sm sm:text-base leading-relaxed text-neutral-500 dark:text-zinc-400">
+              <p className="text-sm sm:text-base leading-relaxed text-[var(--muted)]">
                 {item.description}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {item.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-xs px-3 py-1 rounded-full bg-neutral-100 dark:bg-zinc-800 text-neutral-600 dark:text-zinc-300"
+                    className="text-xs px-3 py-1 rounded-full bg-[var(--secondary)] text-[var(--muted)]"
                   >
                     {tag}
                   </span>
@@ -128,10 +128,10 @@ export default function WorkExperience() {
       whileInView="visible"
       viewport={viewport}
     >
-      <motion.p variants={revealRL} className="text-xs text-neutral-500 dark:text-zinc-400 mb-2">
+      <motion.p variants={revealRL} className="text-xs text-[var(--muted)] mb-2">
         Experience
       </motion.p>
-      <div className="border-t border-neutral-200 dark:border-zinc-800">
+      <div className="border-t border-[var(--border)]">
         {experiences.map((item, index) => (
           <ExperienceRow
             key={item.company}

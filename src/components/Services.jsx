@@ -12,20 +12,20 @@ export default function Services() {
       whileInView="visible"
       viewport={viewport}
     >
-      <motion.p variants={revealRL} className="text-xs text-neutral-500 dark:text-zinc-400 mb-2">
+      <motion.p variants={revealRL} className="text-xs text-[var(--muted)] mb-2">
         Services
       </motion.p>
-      <div className="border-t border-neutral-200 dark:border-zinc-800">
+      <div className="border-t border-[var(--border)]">
         {services.map((service) => (
           <motion.div
             key={service}
             variants={revealRL}
-            className="flex items-center justify-between py-5 border-b border-neutral-200 dark:border-zinc-800"
+            className="flex items-center justify-between py-5 border-b border-[var(--border)]"
           >
-            <span className="text-2xl sm:text-3xl font-medium tracking-tight text-ink dark:text-white">
+            <span className="text-2xl sm:text-3xl font-medium tracking-tight text-[var(--primary)]">
               {service}
             </span>
-            <span className="text-neutral-400 dark:text-zinc-600 text-lg">↓</span>
+            <span className="text-[var(--muted)] text-lg">↓</span>
           </motion.div>
         ))}
       </div>

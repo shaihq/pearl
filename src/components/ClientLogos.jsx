@@ -54,12 +54,12 @@ function LogoRow({ items }) {
           <motion.span
             key={i}
             variants={revealRL}
-            className="text-neutral-400 dark:text-zinc-600 font-medium tracking-tight text-base"
+            className="text-[var(--muted)] font-medium tracking-tight text-base"
           >
             {item.label}
           </motion.span>
         ) : (
-          <motion.span key={i} variants={revealRL} className="text-neutral-400 dark:text-zinc-600">
+          <motion.span key={i} variants={revealRL} className="text-[var(--muted)]">
             <item.Icon />
           </motion.span>
         )

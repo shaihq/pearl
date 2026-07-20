@@ -63,7 +63,7 @@ export default function NavDrawer({ open, onClose }) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ duration: 0.65, ease: EASE }}
-            className="fixed inset-y-0 right-0 z-[60] w-full sm:w-[420px] bg-ink dark:bg-zinc-900 text-white overflow-y-auto shadow-2xl"
+            className="fixed inset-y-0 right-0 z-[60] w-full sm:w-[420px] bg-[var(--surface-strong)] text-white overflow-y-auto shadow-2xl"
           >
             <div className="h-full relative px-6 sm:px-8 pt-28 pb-16">
               <button

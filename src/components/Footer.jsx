@@ -18,7 +18,7 @@ export default function Footer({ onHeightChange }) {
   return (
     <footer
       ref={footerRef}
-      className="fixed inset-x-0 bottom-0 z-0 bg-ink dark:bg-zinc-900 text-white px-6 sm:px-8 pt-16 pb-6 transition-colors duration-500"
+      className="fixed inset-x-0 bottom-0 z-0 bg-[var(--surface-strong)] text-white px-6 sm:px-8 pt-16 pb-6 transition-colors duration-500"
     >
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between gap-10">
@@ -56,7 +56,7 @@ export default function Footer({ onHeightChange }) {
 
         <div className="mt-24 flex items-center justify-between text-xs text-neutral-500">
           <p>2026 Pearl Framer template crafted with love by David Pietrasiak</p>
-          <span className="flex items-center gap-1.5 bg-neutral-800 dark:bg-zinc-800 text-neutral-300 rounded-full px-3 py-1.5">
+          <span className="flex items-center gap-1.5 bg-white/10 text-neutral-300 rounded-full px-3 py-1.5">
             ● Made in Framer
           </span>
         </div>

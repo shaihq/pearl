@@ -26,7 +26,7 @@ export default function SmoothScroll({ children, extraScroll = 0 }) {
       <motion.div
         ref={contentRef}
         style={{ y }}
-        className="fixed inset-x-0 top-0 z-10 bg-white dark:bg-zinc-950 transition-colors duration-500 will-change-transform"
+        className="fixed inset-x-0 top-0 z-10 bg-[var(--background)] transition-colors duration-500 will-change-transform"
       >
         {children}
       </motion.div>
