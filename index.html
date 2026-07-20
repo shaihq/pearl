@@ -8,15 +8,23 @@
     <script>
       (function () {
         try {
+          var config = {
+            light: { domTheme: 'light', template: null },
+            dark: { domTheme: 'dark', template: null },
+            brown: { domTheme: 'dark', template: 'brown' },
+            plant: { domTheme: 'light', template: 'plant' },
+            blossom: { domTheme: 'light', template: 'blossom' },
+          }
           var stored = localStorage.getItem('theme')
-          var theme =
-            stored === 'light' || stored === 'dark'
-              ? stored
-              : window.matchMedia('(prefers-color-scheme: dark)').matches
-              ? 'dark'
-              : 'light'
-          document.documentElement.setAttribute('data-theme', theme)
-          document.documentElement.style.colorScheme = theme
+          var theme = config[stored]
+            ? stored
+            : window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light'
+          var current = config[theme]
+          document.documentElement.setAttribute('data-theme', current.domTheme)
+          if (current.template) document.documentElement.setAttribute('data-template', current.template)
+          document.documentElement.style.colorScheme = current.domTheme
         } catch (e) {}
       })()
     </script>

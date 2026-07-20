@@ -79,6 +79,152 @@
   --tiptap-review-list: var(--tiptap-text);
 }
 
+/*
+ * Brown template
+ * --------------
+ * A third, dark-only palette selected via a SEPARATE attribute
+ * (data-template="brown") rather than a third data-theme value — this
+ * always applies on top of data-theme="dark" (set together by
+ * ThemeContext), so it's structurally "dark mode" with a warm palette
+ * swapped in, not an independent light/dark axis of its own.
+ *
+ * Colors approximate the reference screenshot using the closest Tailwind
+ * "stone" swatches (a warm-toned gray, unlike the cooler zinc/neutral used
+ * elsewhere) plus a vivid green lifted from the UI's glowing accent dial.
+ * Placed after [data-theme="dark"] so it wins the cascade at equal
+ * selector specificity — html carries both attributes at once when this
+ * template is active.
+ */
+[data-template='brown'] {
+  /* Whole scale nudged one Tailwind stop lighter than the reference (950→900
+     etc.) so the page background isn't near-black — makes it read as warm
+     dark brown instead of crushed black, and stand out a bit more against
+     dark UI mockups. --surface-strong stays pinned at stone-950 (the old
+     background value) so Footer/NavDrawer remain the deepest surface. */
+  --background: #1c1917; /* stone-900 */
+  --card: #292524; /* stone-800 */
+  --secondary: #44403c; /* stone-700 */
+  --secondary-hover: #57534e; /* stone-600 */
+  --secondary-border: #57534e; /* stone-600 */
+  --secondary-border-hover: #78716c; /* stone-500 */
+  --accent: #4ade80; /* green-400 — matches the glowing "AI Balance" dial in the reference */
+  --muted: #a8a29e; /* stone-400 */
+  --border: #57534e; /* stone-600 */
+  --sidebar: #292524; /* not used — aliased to --card (stone-800) */
+  --sidebar-accent: #4ade80; /* not used — aliased to --accent (green-400) */
+  --primary: #f5f5f4; /* stone-100 */
+  --primary-foreground: #0c0a09; /* stone-950 */
+  --primary-hover: #e7e5e4; /* stone-200 */
+  --sidebar-primary: #f5f5f4; /* not used — aliased to --primary (stone-100) */
+  --sidebar-ring: #f5f5f4; /* not used — aliased to --ring, inherited from :root */
+
+  --surface-strong: #0c0a09; /* stone-950 — Footer/NavDrawer surface, kept darkest for contrast against the lighter background */
+
+  /* Tiptap tokens — not used, no Tiptap editor in this project */
+  --tiptap-text: #f5f5f4; /* stone-100 */
+  --tiptap-work-paragraph: var(--tiptap-text);
+  --tiptap-review-paragraph: var(--tiptap-text);
+  --tiptap-work-list: var(--tiptap-text);
+  --tiptap-review-list: var(--tiptap-text);
+}
+
+/*
+ * Plant template
+ * --------------
+ * A fourth palette, same pattern as brown: a separate data-template value
+ * layered on top of a structural data-theme. The reference (a bold
+ * portfolio site on a chartreuse/lime background with stark black type) is
+ * a LIGHT palette, so this pairs with data-theme="light" — ThemeContext
+ * sets both together.
+ *
+ * Colors approximate the reference using the closest Tailwind "lime"
+ * swatches for the structural tones, true black for the (very high-
+ * contrast) text, and "orange" lifted from the vivid burst icon in the
+ * body copy as the accent. The reference has no visible card/secondary/
+ * border examples — it's one flat background with black text — so those
+ * steps are inferred within the same lime family for tonal consistency.
+ * Placed after :root so it reliably overrides it at equal specificity —
+ * html carries both data-theme="light" and data-template="plant" at once
+ * when this template is active.
+ */
+[data-template='plant'] {
+  --background: #d9f99d; /* lime-200 */
+  --card: #ecfccb; /* lime-100 — lighter panel surface */
+  --secondary: #ecfccb; /* lime-100 */
+  --secondary-hover: #bef264; /* lime-300 */
+  --secondary-border: #bef264; /* lime-300 */
+  --secondary-border-hover: #a3e635; /* lime-400 (not currently used) */
+  --accent: #ea580c; /* orange-600 — approximates the vivid orange burst icon in the reference's body copy */
+  --muted: #4d7c0f; /* lime-700 — the reference has no distinct muted text; inferred as a dark, legible step within the lime family rather than pure black */
+  --border: #bef264; /* lime-300 */
+  --sidebar: #ecfccb; /* not used — aliased to --card (lime-100) */
+  --sidebar-accent: #ea580c; /* not used — aliased to --accent (orange-600) */
+  --primary: #000000; /* black — the reference's heading/body text is true black, not a tinted "ink" */
+  --primary-foreground: #f7fee7; /* lime-50 */
+  --primary-hover: #1a2e05; /* lime-950 */
+  --sidebar-primary: #000000; /* not used — aliased to --primary (black) */
+  --sidebar-ring: #000000; /* not used — aliased to --ring, inherited from :root */
+
+  --surface-strong: #1a2e05; /* lime-950 — Footer/NavDrawer surface: darkest lime, grounding the page the same way ink does in the default light theme */
+
+  /* Tiptap tokens — not used, no Tiptap editor in this project */
+  --tiptap-text: #000000; /* black */
+  --tiptap-work-paragraph: var(--tiptap-text);
+  --tiptap-review-paragraph: var(--tiptap-text);
+  --tiptap-work-list: var(--tiptap-text);
+  --tiptap-review-list: var(--tiptap-text);
+}
+
+/*
+ * Blossom template
+ * ----------------
+ * A fifth palette, same pattern as brown/plant: a separate data-template
+ * value layered on top of a structural data-theme. The reference (a
+ * personal-site intro on a pale lavender-pink background) is a LIGHT
+ * palette, so this pairs with data-theme="light" — ThemeContext sets both
+ * together.
+ *
+ * Colors approximate the reference using the closest Tailwind "fuchsia"
+ * swatches throughout, including text — the reference's own type is plain
+ * dark gray, but a flat gray read as visually disconnected from the rest
+ * of the palette, so --primary/--muted/--surface-strong were deliberately
+ * pulled into deep fuchsia (rather than matching the source literally) so
+ * every surface, including Footer/NavDrawer, carries a consistent pink
+ * tint instead of reverting to plain black/gray. Footer's own "Let's talk"
+ * pill and NavDrawer's close button are hardcoded white/ink (not
+ * tokenized), so darkening --surface-strong doesn't risk blending with
+ * anything sitting on top of it. Placed after :root so it reliably
+ * overrides it at equal specificity — html carries both
+ * data-theme="light" and data-template="blossom" at once when active.
+ */
+[data-template='blossom'] {
+  --background: #fae8ff; /* fuchsia-100 */
+  --card: #fdf4ff; /* fuchsia-50 — lighter panel surface */
+  --secondary: #fdf4ff; /* fuchsia-50 — tag-badge fill ("tan-er", "he, him, his") */
+  --secondary-hover: #f0abfc; /* fuchsia-300 */
+  --secondary-border: #f0abfc; /* fuchsia-300 — matches the tag badges' visible outline */
+  --secondary-border-hover: #e879f9; /* fuchsia-400 (not currently used) */
+  --accent: #d946ef; /* fuchsia-500 — no distinct accent in the reference (links are underlined body-color text); vivid pop chosen for thematic consistency */
+  --muted: #a21caf; /* fuchsia-700 — pink-tinted secondary text instead of a flat gray */
+  --border: #f0abfc; /* fuchsia-300 */
+  --sidebar: #fdf4ff; /* not used — aliased to --card (fuchsia-50) */
+  --sidebar-accent: #d946ef; /* not used — aliased to --accent (fuchsia-500) */
+  --primary: #4a044e; /* fuchsia-950 — deep plum instead of plain near-black, so heading/body text blends with the theme */
+  --primary-foreground: #fdf4ff; /* fuchsia-50 */
+  --primary-hover: #701a75; /* fuchsia-900 */
+  --sidebar-primary: #4a044e; /* not used — aliased to --primary (fuchsia-950) */
+  --sidebar-ring: #4a044e; /* not used — aliased to --ring, inherited from :root */
+
+  --surface-strong: #4a044e; /* fuchsia-950 — Footer/NavDrawer surface: same deep plum as --primary, giving those bands a pink tint instead of plain black */
+
+  /* Tiptap tokens — not used, no Tiptap editor in this project */
+  --tiptap-text: #4a044e; /* fuchsia-950 */
+  --tiptap-work-paragraph: var(--tiptap-text);
+  --tiptap-review-paragraph: var(--tiptap-text);
+  --tiptap-work-list: var(--tiptap-text);
+  --tiptap-review-list: var(--tiptap-text);
+}
+
 * {
   box-sizing: border-box;
 }
