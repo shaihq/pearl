@@ -45,11 +45,14 @@ function CompanyBadge({ name }) {
   )
 }
 
-function ExperienceRow({ item }) {
+function ExperienceRow({ item, isLast }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <motion.div variants={revealRL} className="border-b border-neutral-200 dark:border-zinc-800">
+    <motion.div
+      variants={revealRL}
+      className={isLast ? '' : 'border-b border-neutral-200 dark:border-zinc-800'}
+    >
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -129,8 +132,12 @@ export default function WorkExperience() {
         Experience
       </motion.p>
       <div className="border-t border-neutral-200 dark:border-zinc-800">
-        {experiences.map((item) => (
-          <ExperienceRow key={item.company} item={item} />
+        {experiences.map((item, index) => (
+          <ExperienceRow
+            key={item.company}
+            item={item}
+            isLast={index === experiences.length - 1}
+          />
         ))}
       </div>
     </motion.section>

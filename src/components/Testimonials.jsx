@@ -55,7 +55,7 @@ export default function Testimonials() {
 
   return (
     <motion.section
-      className="py-14 border-t border-neutral-200 dark:border-zinc-800"
+      className="pb-14"
       variants={revealContainer}
       initial="hidden"
       whileInView="visible"
