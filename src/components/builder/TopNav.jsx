@@ -13,7 +13,7 @@ export default function TopNav({ themesOpen, onThemesClick }) {
       {/* Mobile: hamburger (opens consolidated nav) + logo, Publish + avatar stay reachable */}
       <div className="flex md:hidden w-full items-center justify-between">
         <div className="flex items-center gap-2">
-          <MobileNav />
+          <MobileNav onThemesClick={onThemesClick} />
           <PearlLogo className="w-6 h-6 shrink-0" />
         </div>
 

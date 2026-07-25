@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link2, Menu, Pencil } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -11,9 +12,11 @@ function SectionLabel({ children }) {
   return <p className="px-3 pt-3 pb-1 text-[11px] font-medium uppercase tracking-wide text-white/40">{children}</p>
 }
 
-export default function MobileNav() {
+export default function MobileNav({ onThemesClick }) {
+  const [open, setOpen] = useState(false)
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon-xs" className="text-white/70 hover:bg-white/10 hover:text-white">
           <Menu />
@@ -54,7 +57,18 @@ export default function MobileNav() {
           <SectionLabel>Actions</SectionLabel>
           <div className="flex flex-col gap-0.5">
             {TOP_NAV_ACTIONS.map((item) => (
-              <NavRow key={item.label} {...item} />
+              <NavRow
+                key={item.label}
+                {...item}
+                onClick={
+                  item.label === 'Themes'
+                    ? () => {
+                        setOpen(false)
+                        onThemesClick()
+                      }
+                    : undefined
+                }
+              />
             ))}
           </div>
         </div>

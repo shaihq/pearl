@@ -1,7 +1,8 @@
-export default function NavRow({ icon: Icon, label, active, compact = false }) {
+export default function NavRow({ icon: Icon, label, active, compact = false, onClick }) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className={
         (compact
           ? 'flex h-7 w-full items-center gap-2 rounded-md px-2.5 text-xs '

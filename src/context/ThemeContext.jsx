@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 const ThemeContext = createContext(null)
 
-const THEME_ORDER = ['light', 'dark', 'brown', 'plant', 'blossom']
+export const THEME_ORDER = ['light', 'dark', 'brown', 'plant', 'blossom']
 
 // Each theme maps to a structural data-theme (light/dark) plus an optional
 // data-template that layers a palette on top. brown/plant/blossom aren't
@@ -46,7 +46,7 @@ export function ThemeProvider({ children }) {
     setTheme((t) => THEME_ORDER[(THEME_ORDER.indexOf(t) + 1) % THEME_ORDER.length])
   }, [])
 
-  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>
+  return <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>{children}</ThemeContext.Provider>
 }
 
 export function useTheme() {
