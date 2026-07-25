@@ -37,6 +37,9 @@
   --primary: #0a0a0a; /* bg-ink / text-ink (also used as the site's main heading/emphasis text color) */
   --primary-foreground: #ffffff; /* text-white */
   --primary-hover: #262626; /* hover:bg-neutral-800 */
+  --button-primary: #ffffff; /* system Button "default" variant background — white on light-family themes */
+  --button-primary-foreground: #0a0a0a; /* text-ink on top of --button-primary */
+  --button-primary-hover: #f5f5f5; /* hover:bg-neutral-100 */
   --ring: #0a0a0a; /* not currently implemented — no focus-visible styles yet; aliased to --primary */
   --sidebar-primary: #0a0a0a; /* not used — no sidebar in this project; aliased to --primary */
   --sidebar-ring: #0a0a0a; /* not used — no sidebar in this project; aliased to --ring */
@@ -66,6 +69,9 @@
   --primary: #ffffff; /* bg-white / text-white */
   --primary-foreground: #0a0a0a; /* text-ink */
   --primary-hover: #e5e5e5; /* hover:bg-neutral-200 */
+  --button-primary: #ff553e; /* system Button "default" variant background — brand orange on dark-family themes */
+  --button-primary-foreground: #ffffff; /* text-white on top of --button-primary */
+  --button-primary-hover: #e6472f; /* darkened --button-primary for hover */
   --sidebar-primary: #ffffff; /* not used — aliased to --primary */
   --sidebar-ring: #ffffff; /* not used — aliased to --ring (inherited from :root, unchanged) */
 

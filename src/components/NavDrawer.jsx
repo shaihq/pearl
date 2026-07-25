@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useCanvas } from '../context/CanvasContext'
 
 const EASE = [0.16, 1, 0.3, 1]
 
@@ -25,10 +26,14 @@ const navLinks = [
 const socialLinks = ['X / Twitter', 'Instagram', 'Threads', 'LinkedIn']
 
 export default function NavDrawer({ open, onClose }) {
+  const { containerRef } = useCanvas()
+
   useEffect(() => {
     if (!open) return
 
-    document.body.style.overflow = 'hidden'
+    const el = containerRef.current
+    const prevOverflow = el?.style.overflow
+    if (el) el.style.overflow = 'hidden'
 
     function handleKeyDown(e) {
       if (e.key === 'Escape') onClose()
@@ -36,10 +41,10 @@ export default function NavDrawer({ open, onClose }) {
     window.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      document.body.style.overflow = ''
+      if (el) el.style.overflow = prevOverflow
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [open, onClose])
+  }, [open, onClose, containerRef])
 
   return (
     <AnimatePresence>

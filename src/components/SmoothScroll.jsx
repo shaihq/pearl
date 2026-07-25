@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
+import { useCanvas } from '../context/CanvasContext'
 
 export default function SmoothScroll({ children, extraScroll = 0 }) {
+  const { containerRef } = useCanvas()
   const contentRef = useRef(null)
   const [contentHeight, setContentHeight] = useState(0)
 
@@ -17,7 +19,7 @@ export default function SmoothScroll({ children, extraScroll = 0 }) {
     return () => observer.disconnect()
   }, [])
 
-  const { scrollY } = useScroll()
+  const { scrollY } = useScroll({ container: containerRef })
   const smoothY = useSpring(scrollY, { damping: 28, stiffness: 220, mass: 0.4 })
   const y = useTransform(smoothY, (value) => -value)
 

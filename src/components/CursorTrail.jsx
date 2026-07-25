@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useCursor } from '../context/CursorContext'
+import { useCanvas } from '../context/CanvasContext'
 
 const MAX_POINTS = 16
 const BALL_RADIUS = 5
@@ -8,6 +9,7 @@ const EASE = 0.15
 export default function CursorTrail() {
   const canvasRef = useRef(null)
   const { visible } = useCursor()
+  const { containerRef } = useCanvas()
   const suppressedRef = useRef(visible)
 
   useEffect(() => {
@@ -15,33 +17,41 @@ export default function CursorTrail() {
   }, [visible])
 
   useEffect(() => {
+    const container = containerRef.current
     const canvas = canvasRef.current
+    if (!container || !canvas) return
+
     const ctx = canvas.getContext('2d')
     const dpr = window.devicePixelRatio || 1
 
-    const ball = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+    let width = container.clientWidth
+    let height = container.clientHeight
+    const ball = { x: width / 2, y: height / 2 }
     const target = { x: ball.x, y: ball.y }
     const points = []
     let rafId
 
     function resize() {
-      canvas.width = window.innerWidth * dpr
-      canvas.height = window.innerHeight * dpr
-      canvas.style.width = `${window.innerWidth}px`
-      canvas.style.height = `${window.innerHeight}px`
+      width = container.clientWidth
+      height = container.clientHeight
+      canvas.width = width * dpr
+      canvas.height = height * dpr
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
 
     function handleMove(e) {
-      target.x = e.clientX
-      target.y = e.clientY
+      const rect = container.getBoundingClientRect()
+      target.x = e.clientX - rect.left
+      target.y = e.clientY - rect.top
     }
 
     function tick() {
       ball.x += (target.x - ball.x) * EASE
       ball.y += (target.y - ball.y) * EASE
 
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
+      ctx.clearRect(0, 0, width, height)
 
       if (suppressedRef.current) {
         points.length = 0
@@ -80,16 +90,17 @@ export default function CursorTrail() {
     }
 
     resize()
-    window.addEventListener('resize', resize)
-    window.addEventListener('mousemove', handleMove)
+    const observer = new ResizeObserver(resize)
+    observer.observe(container)
+    container.addEventListener('mousemove', handleMove)
     rafId = requestAnimationFrame(tick)
 
     return () => {
-      window.removeEventListener('resize', resize)
-      window.removeEventListener('mousemove', handleMove)
+      observer.disconnect()
+      container.removeEventListener('mousemove', handleMove)
       cancelAnimationFrame(rafId)
     }
-  }, [])
+  }, [containerRef])
 
   return <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none fixed inset-0 z-[9000]" />
 }

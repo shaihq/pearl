@@ -1,8 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useCanvas } from './CanvasContext'
 
 const CursorContext = createContext(null)
 
 export function CursorProvider({ children }) {
+  const { containerRef } = useCanvas()
   const wrapRef = useRef(null)
   const [visible, setVisible] = useState(false)
 
@@ -13,12 +15,16 @@ export function CursorProvider({ children }) {
   }, [])
 
   useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
     function handleMove(e) {
-      moveTo(e.clientX, e.clientY)
+      const rect = el.getBoundingClientRect()
+      moveTo(e.clientX - rect.left, e.clientY - rect.top)
     }
-    window.addEventListener('mousemove', handleMove)
-    return () => window.removeEventListener('mousemove', handleMove)
-  }, [moveTo])
+    el.addEventListener('mousemove', handleMove)
+    return () => el.removeEventListener('mousemove', handleMove)
+  }, [moveTo, containerRef])
 
   const show = useCallback(
     (e) => {

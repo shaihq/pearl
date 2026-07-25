@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import BuilderShell from './components/builder/BuilderShell'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import FeaturedProject from './components/FeaturedProject'
@@ -18,28 +19,31 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <CursorProvider>
-        <CursorTrail />
-        <Navbar />
+      <BuilderShell>
+        <CursorProvider>
+          <CursorTrail />
 
-        <SmoothScroll extraScroll={footerHeight}>
-          <div className="pt-24">
-            <div className="max-w-7xl mx-auto px-6 sm:px-8">
-              <Hero />
-              <FeaturedProject />
-              <ProjectGrid />
+          <Navbar />
 
-              <AboutMe />
+          <SmoothScroll extraScroll={footerHeight}>
+            <div className="pt-24">
+              <div className="max-w-7xl mx-auto px-6 sm:px-8">
+                <Hero />
+                <FeaturedProject />
+                <ProjectGrid />
 
-              <WorkExperience />
+                <AboutMe />
 
-              <Testimonials />
+                <WorkExperience />
+
+                <Testimonials />
+              </div>
             </div>
-          </div>
-        </SmoothScroll>
+          </SmoothScroll>
 
-        <Footer onHeightChange={handleFooterHeight} />
-      </CursorProvider>
+          <Footer onHeightChange={handleFooterHeight} />
+        </CursorProvider>
+      </BuilderShell>
     </ThemeProvider>
   )
 }
