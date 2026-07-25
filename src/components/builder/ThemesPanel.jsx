@@ -17,8 +17,8 @@ const PANEL_TABS = [
 const THEME_SWATCHES = {
   light: { label: 'Light', background: '#ffffff', card: '#e4e5ea', primary: '#0a0a0a', accent: '#6366f1' },
   dark: { label: 'Dark', background: '#09090b', card: '#18181b', primary: '#ffffff', accent: '#6366f1' },
-  brown: { label: 'Brown', background: '#1c1917', card: '#292524', primary: '#f5f5f4', accent: '#4ade80' },
-  plant: { label: 'Plant', background: '#d9f99d', card: '#ecfccb', primary: '#000000', accent: '#ea580c' },
+  brown: { label: 'Coffee', background: '#1c1917', card: '#292524', primary: '#f5f5f4', accent: '#4ade80' },
+  plant: { label: 'Moss', background: '#d9f99d', card: '#ecfccb', primary: '#000000', accent: '#ea580c' },
   blossom: { label: 'Blossom', background: '#fae8ff', card: '#fdf4ff', primary: '#4a044e', accent: '#d946ef' },
 }
 
