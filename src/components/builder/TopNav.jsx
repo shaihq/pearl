@@ -9,9 +9,11 @@ import {
   Globe,
   Link2,
   Loader2,
+  LogOut,
   Lock,
   Palette,
   Pencil,
+  Settings,
   Sparkles,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -102,6 +104,34 @@ function PasswordProtectControl() {
   )
 }
 
+function ProfileMenu() {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+          <Avatar className="size-7">
+            <AvatarFallback className="bg-white/10 text-white text-xs">P</AvatarFallback>
+          </Avatar>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-64 border-white/10 bg-[#18181b] p-1 text-white">
+        <button className="flex w-full items-start gap-3 rounded-md px-2 py-2 text-left hover:bg-white/10">
+          <Settings className="mt-0.5 size-4 shrink-0 text-white/70" />
+          <span>
+            <span className="block text-sm font-medium text-white">Settings</span>
+            <span className="block text-xs text-white/50">Custom Domains, Username and more</span>
+          </span>
+        </button>
+        <div className="my-1 h-px bg-white/10" />
+        <button className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left hover:bg-white/10">
+          <LogOut className="size-4 shrink-0 text-white/70" />
+          <span className="text-sm font-medium text-white">Logout</span>
+        </button>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 function AnalyzeButton() {
   const [analyzing, setAnalyzing] = useState(false)
 
@@ -152,9 +182,7 @@ export default function TopNav({
               <Globe />
               Publish
             </Button>
-            <Avatar className="size-7">
-              <AvatarFallback className="bg-white/10 text-white text-xs">P</AvatarFallback>
-            </Avatar>
+            <ProfileMenu />
           </div>
         </div>
 
@@ -266,9 +294,7 @@ export default function TopNav({
             <Globe />
             Publish
           </Button>
-          <Avatar className="size-7">
-            <AvatarFallback className="bg-white/10 text-white text-xs">P</AvatarFallback>
-          </Avatar>
+          <ProfileMenu />
         </div>
       </div>
     </header>
