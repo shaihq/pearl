@@ -12,7 +12,7 @@ function SectionLabel({ children }) {
   return <p className="px-3 pt-3 pb-1 text-[11px] font-medium uppercase tracking-wide text-white/40">{children}</p>
 }
 
-export default function MobileNav({ onThemesClick }) {
+export default function MobileNav({ onThemesClick, onInsightsClick }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -56,20 +56,25 @@ export default function MobileNav({ onThemesClick }) {
 
           <SectionLabel>Actions</SectionLabel>
           <div className="flex flex-col gap-0.5">
-            {TOP_NAV_ACTIONS.map((item) => (
-              <NavRow
-                key={item.label}
-                {...item}
-                onClick={
-                  item.label === 'Themes'
-                    ? () => {
-                        setOpen(false)
-                        onThemesClick()
-                      }
-                    : undefined
-                }
-              />
-            ))}
+            {TOP_NAV_ACTIONS.map((item) => {
+              const panelClick =
+                item.label === 'Themes' ? onThemesClick : item.label === 'Insights' ? onInsightsClick : null
+
+              return (
+                <NavRow
+                  key={item.label}
+                  {...item}
+                  onClick={
+                    panelClick
+                      ? () => {
+                          setOpen(false)
+                          panelClick()
+                        }
+                      : undefined
+                  }
+                />
+              )
+            })}
           </div>
         </div>
       </SheetContent>

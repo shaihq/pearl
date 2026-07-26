@@ -3,6 +3,7 @@ import { Monitor, X } from 'lucide-react'
 import { CanvasProvider } from '../../context/CanvasContext'
 import { BuilderPanelProvider } from '../../context/BuilderPanelContext'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import InsightsPanel from './InsightsPanel'
 import LeftNav from './LeftNav'
 import RightPanelSheet from './RightPanelSheet'
 import SectionEditorPanel from './SectionEditorPanel'
@@ -162,6 +163,11 @@ export default function BuilderShell({ children }) {
     setPanelOpen(true)
   }
 
+  function openInsights() {
+    setPanelView({ type: 'insights' })
+    setPanelOpen(true)
+  }
+
   function openSection(sectionKey, label) {
     setPanelView({ type: 'section', sectionKey, label })
     setPanelOpen(true)
@@ -177,10 +183,12 @@ export default function BuilderShell({ children }) {
   }, [panelOpen])
 
   const isThemesView = panelView.type === 'themes'
-  const panelTitle = isThemesView ? 'Themes' : `Edit ${panelView.label}`
+  const isInsightsView = panelView.type === 'insights'
+  const panelTitle = isThemesView ? 'Themes' : isInsightsView ? 'Insights' : `Edit ${panelView.label}`
 
   function renderPanelContent(hideHeader) {
     if (isThemesView) return <ThemesPanel hideHeader={hideHeader} onClose={() => setPanelOpen(false)} />
+    if (isInsightsView) return <InsightsPanel hideHeader={hideHeader} onClose={() => setPanelOpen(false)} />
     return (
       <SectionEditorPanel
         hideHeader={hideHeader}
@@ -221,6 +229,11 @@ export default function BuilderShell({ children }) {
               onThemesClick={() => {
                 if (panelOpen && isThemesView) setPanelOpen(false)
                 else openThemes()
+              }}
+              insightsOpen={panelOpen && isInsightsView}
+              onInsightsClick={() => {
+                if (panelOpen && isInsightsView) setPanelOpen(false)
+                else openInsights()
               }}
             />
 

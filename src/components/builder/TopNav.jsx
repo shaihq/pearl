@@ -7,13 +7,13 @@ import MobileNav from './MobileNav'
 import PearlLogo from './PearlLogo'
 import SparkleIcon from './SparkleIcon'
 
-export default function TopNav({ themesOpen, onThemesClick }) {
+export default function TopNav({ themesOpen, onThemesClick, insightsOpen, onInsightsClick }) {
   return (
     <header className="h-14 shrink-0 flex items-center px-4 border-b border-white/10 bg-[#18181b] text-white">
       {/* Mobile: hamburger (opens consolidated nav) + logo, Publish + avatar stay reachable */}
       <div className="flex md:hidden w-full items-center justify-between">
         <div className="flex items-center gap-2">
-          <MobileNav onThemesClick={onThemesClick} />
+          <MobileNav onThemesClick={onThemesClick} onInsightsClick={onInsightsClick} />
           <PearlLogo className="w-6 h-6 shrink-0" />
         </div>
 
@@ -73,7 +73,11 @@ export default function TopNav({ themesOpen, onThemesClick }) {
           <Button
             variant="outline"
             size="xs"
-            className="border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white"
+            onClick={onInsightsClick}
+            className={
+              'border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white' +
+              (insightsOpen ? ' bg-white/10' : '')
+            }
           >
             <BarChart3 />
             Insights
