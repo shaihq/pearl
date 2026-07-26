@@ -26,15 +26,11 @@ export default function ProjectGrid() {
       viewport={viewport}
     >
       {projects.map(({ Card, client, title }) => (
-        <motion.div
-          key={title}
-          variants={revealBT}
-          className="group cursor-none"
-          onMouseEnter={show}
-          onMouseLeave={hide}
-        >
+        <motion.div key={title} variants={revealBT}>
           <EditableItem itemLabel={title} sectionKey="projects" sectionLabel="Projects">
-            <Card />
+            <div className="group cursor-none" onMouseEnter={show} onMouseLeave={hide}>
+              <Card />
+            </div>
             <div className="mt-4 flex flex-col gap-0.5">
               <p className="text-xs text-[var(--muted)]">{client}</p>
               <p className="text-sm font-medium text-[var(--primary)]">{title}</p>

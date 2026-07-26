@@ -52,7 +52,7 @@ export default function Hero() {
           variants={revealRL}
           src="/faizur.jpg"
           alt="Matt"
-          className="w-56 h-56 sm:w-64 sm:h-64 lg:w-80 lg:h-80 rounded-2xl border border-[var(--border)] object-cover shrink-0 shadow-xl"
+          className="w-44 h-44 sm:w-64 sm:h-64 lg:w-80 lg:h-80 rounded-2xl border border-[var(--border)] object-cover shrink-0 shadow-xl"
         />
       </div>
     </motion.section>

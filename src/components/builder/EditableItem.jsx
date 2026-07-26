@@ -29,9 +29,15 @@ export default function EditableItem({ itemLabel, sectionKey, sectionLabel, acti
         row, top-center, dropping down from above — reads at a glance as a
         different kind of control than the section's vertical top-right
         stack, instead of an ambiguous scaled-down copy of it.
+
+        Mobile-first: visible at rest below lg, hidden-until-hover only at
+        lg+ (matches EditableSection and the rest of the shell's own
+        mobile/desktop breakpoint). -translate-x-1/2 is pure horizontal
+        centering, not part of the reveal, so it stays unconditional at
+        every breakpoint instead of being toggled with the rest.
       */}
       <div
-        className="pointer-events-none absolute top-2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1 flex-row gap-0.5 rounded-md border border-white/10 bg-[#18181b] p-1 opacity-0 shadow-lg transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/item:pointer-events-auto group-hover/item:translate-y-0 group-hover/item:opacity-100"
+        className="absolute top-2 left-1/2 z-10 flex -translate-x-1/2 flex-row gap-0.5 rounded-md border border-white/10 bg-[#18181b] p-1 opacity-100 shadow-lg transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] lg:-translate-y-1 lg:pointer-events-none lg:opacity-0 lg:group-hover/item:pointer-events-auto lg:group-hover/item:translate-y-0 lg:group-hover/item:opacity-100"
       >
         {actions.map(resolveAction).map(({ key, icon: Icon, label: actionLabel }) => (
           <Tooltip key={key}>

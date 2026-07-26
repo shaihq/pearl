@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Monitor, X } from 'lucide-react'
 import { CanvasProvider } from '../../context/CanvasContext'
 import { BuilderPanelProvider } from '../../context/BuilderPanelContext'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
@@ -52,6 +53,7 @@ export default function BuilderShell({ children }) {
   // panel's width, not the full window width.
   const [mainWidth, setMainWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1200))
   const [leftExpanded, setLeftExpanded] = useState(false)
+  const [desktopNoticeDismissed, setDesktopNoticeDismissed] = useState(false)
   // Whether the right-hand panel is open, and separately what it's showing —
   // Themes or a given section's editor. Kept apart from panelOpen so
   // switching between the two (panel already open) is an instant content
@@ -221,6 +223,26 @@ export default function BuilderShell({ children }) {
                 else openThemes()
               }}
             />
+
+            {/* Editing (hover-to-reveal actions, side-panel real estate) is
+                built for a mouse and a wide viewport — below the compact
+                breakpoint it's all still usable, just noticeably more
+                cramped, so say so once instead of leaving people to
+                discover it the hard way. */}
+            {isCompact && !desktopNoticeDismissed && (
+              <div className="flex shrink-0 items-center gap-2 border-b border-white/10 bg-white/5 px-4 py-2 text-xs text-white/70">
+                <Monitor className="h-3.5 w-3.5 shrink-0 text-white/50" />
+                <p className="flex-1">Editing works best on a desktop — this screen is more limited.</p>
+                <button
+                  type="button"
+                  onClick={() => setDesktopNoticeDismissed(true)}
+                  aria-label="Dismiss"
+                  className="shrink-0 rounded-md p-1 text-white/40 hover:bg-white/10 hover:text-white"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
 
             {isCompact ? (
               // Below the compact breakpoint there's no room for a side
