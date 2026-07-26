@@ -135,26 +135,30 @@ export default function TopNav({
   const isCaseStudy = Boolean(caseStudySlug)
 
   return (
-    <header className="h-14 shrink-0 flex items-center px-4 border-b border-white/10 bg-[#18181b] text-white">
-      {/* Mobile: hamburger (opens consolidated nav) + logo, Publish + avatar stay reachable */}
-      <div className="flex md:hidden w-full items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MobileNav onThemesClick={onThemesClick} onInsightsClick={onInsightsClick} />
-          <PearlLogo className="w-6 h-6 shrink-0" />
+    <>
+      <header className="h-14 shrink-0 flex items-center px-4 border-b border-white/10 bg-[#18181b] text-white">
+        {/* Mobile: hamburger (opens consolidated nav) + logo, Publish + avatar stay
+            reachable — this row is deliberately the same whether or not we're on a
+            case study, so the primary nav never shifts around; the case-study
+            controls get their own row below instead (see the secondary bar). */}
+        <div className="flex md:hidden w-full items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MobileNav onThemesClick={onThemesClick} onInsightsClick={onInsightsClick} />
+            <PearlLogo className="w-6 h-6 shrink-0" />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button size="xs" className="bg-[#FF553E] text-white hover:bg-[#e6472f]">
+              <Globe />
+              Publish
+            </Button>
+            <Avatar className="size-7">
+              <AvatarFallback className="bg-white/10 text-white text-xs">P</AvatarFallback>
+            </Avatar>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button size="xs" className="bg-[#FF553E] text-white hover:bg-[#e6472f]">
-            <Globe />
-            Publish
-          </Button>
-          <Avatar className="size-7">
-            <AvatarFallback className="bg-white/10 text-white text-xs">P</AvatarFallback>
-          </Avatar>
-        </div>
-      </div>
-
-      {/* Desktop */}
+        {/* Desktop */}
       <div className="hidden md:flex w-full items-center justify-between">
         <AnimatePresence mode="wait" initial={false}>
           {isCaseStudy ? (
@@ -268,5 +272,38 @@ export default function TopNav({
         </div>
       </div>
     </header>
+
+    {/* Secondary row, mobile/tablet only, case study only — there's no room
+        for Back/Hide/Password protect/Analyze in the primary mobile row
+        above (it's already full with the hamburger, logo, Publish, avatar),
+        and none of them belong in that hamburger menu either since they're
+        specific to this one page, not site-wide actions. A second bar keeps
+        the primary row identical in every state instead of growing/shrinking
+        it, and scrolls horizontally rather than wrapping or truncating —
+        this is a real toolbar, not a nav a user reads top to bottom. */}
+    {isCaseStudy && (
+      <div className="flex md:hidden h-12 shrink-0 items-center gap-2 overflow-x-auto border-b border-white/10 bg-[#18181b] px-4">
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={() => navigate('/')}
+          aria-label="Go back to home"
+          className="shrink-0 text-white/70 hover:bg-white/10 hover:text-white"
+        >
+          <ArrowLeft />
+        </Button>
+        <div className="h-4 w-px shrink-0 bg-white/10" />
+        <div className="shrink-0">
+          <HideToggle />
+        </div>
+        <div className="shrink-0">
+          <PasswordProtectControl />
+        </div>
+        <div className="shrink-0">
+          <AnalyzeButton />
+        </div>
+      </div>
+    )}
+    </>
   )
 }
