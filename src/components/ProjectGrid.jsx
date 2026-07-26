@@ -1,18 +1,9 @@
 import { motion } from 'framer-motion'
-import DazzleCard from './cards/DazzleCard'
-import HealthcareCard from './cards/HealthcareCard'
-import InfographicCard from './cards/InfographicCard'
-import AppPluginCard from './cards/AppPluginCard'
+import { Link } from 'react-router-dom'
 import EditableItem from './builder/EditableItem'
+import { GRID_PROJECTS } from '../data/projects'
 import { useCursor } from '../context/CursorContext'
 import { quickContainer, revealBT, viewport } from '../motion'
-
-const projects = [
-  { Card: DazzleCard, client: 'Dazzle Inc.', title: 'Dazzle © Branding' },
-  { Card: HealthcareCard, client: 'CareSunset', title: 'Healthcare Mobile App' },
-  { Card: InfographicCard, client: 'Tech Bank Client', title: 'Technical Infographic' },
-  { Card: AppPluginCard, client: 'Notex', title: 'Extend & Support - App Plugin' },
-]
 
 export default function ProjectGrid() {
   const { show, hide } = useCursor()
@@ -25,16 +16,18 @@ export default function ProjectGrid() {
       whileInView="visible"
       viewport={viewport}
     >
-      {projects.map(({ Card, client, title }) => (
-        <motion.div key={title} variants={revealBT}>
+      {GRID_PROJECTS.map(({ slug, Card, client, title }) => (
+        <motion.div key={slug} variants={revealBT}>
           <EditableItem itemLabel={title} sectionKey="projects" sectionLabel="Projects">
-            <div className="group cursor-none" onMouseEnter={show} onMouseLeave={hide}>
-              <Card />
-            </div>
-            <div className="mt-4 flex flex-col gap-0.5">
-              <p className="text-xs text-[var(--muted)]">{client}</p>
-              <p className="text-sm font-medium text-[var(--primary)]">{title}</p>
-            </div>
+            <Link to={`/projects/${slug}`} className="block">
+              <div className="group cursor-none" onMouseEnter={show} onMouseLeave={hide}>
+                <Card />
+              </div>
+              <div className="mt-4 flex flex-col gap-0.5">
+                <p className="text-xs text-[var(--muted)]">{client}</p>
+                <p className="text-sm font-medium text-[var(--primary)]">{title}</p>
+              </div>
+            </Link>
           </EditableItem>
         </motion.div>
       ))}

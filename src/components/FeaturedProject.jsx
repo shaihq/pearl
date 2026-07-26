@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion'
-import DashboardMockup from './DashboardMockup'
+import { Link } from 'react-router-dom'
 import EditableItem from './builder/EditableItem'
+import { FEATURED_PROJECT } from '../data/projects'
 import { useCursor } from '../context/CursorContext'
 import { revealContainer, revealRL, viewport } from '../motion'
 
 export default function FeaturedProject() {
   const { show, hide } = useCursor()
+  const { slug, client, title, Card } = FEATURED_PROJECT
 
   return (
     <motion.section
@@ -15,21 +17,16 @@ export default function FeaturedProject() {
       whileInView="visible"
       viewport={viewport}
     >
-      <EditableItem itemLabel="Fintech Dello Banking App" sectionKey="projects" sectionLabel="Projects">
-        <motion.div
-          variants={revealRL}
-          className="group cursor-none rounded-2xl bg-[var(--card)] h-[360px] flex items-center justify-center px-8 overflow-hidden transition-colors duration-500"
-          onMouseEnter={show}
-          onMouseLeave={hide}
-        >
-          <div className="transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110">
-            <DashboardMockup />
-          </div>
-        </motion.div>
-        <motion.div variants={revealRL} className="mt-4 flex flex-col gap-0.5">
-          <p className="text-xs text-[var(--muted)]">Booking Corp.</p>
-          <p className="text-sm font-medium text-[var(--primary)]">Fintech Dello Banking App</p>
-        </motion.div>
+      <EditableItem itemLabel={title} sectionKey="projects" sectionLabel="Projects">
+        <Link to={`/projects/${slug}`} className="block">
+          <motion.div variants={revealRL} onMouseEnter={show} onMouseLeave={hide}>
+            <Card />
+          </motion.div>
+          <motion.div variants={revealRL} className="mt-4 flex flex-col gap-0.5">
+            <p className="text-xs text-[var(--muted)]">{client}</p>
+            <p className="text-sm font-medium text-[var(--primary)]">{title}</p>
+          </motion.div>
+        </Link>
       </EditableItem>
     </motion.section>
   )

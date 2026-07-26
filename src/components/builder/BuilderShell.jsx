@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Monitor, X } from 'lucide-react'
+import { useLocation, useMatch } from 'react-router-dom'
 import { CanvasProvider } from '../../context/CanvasContext'
 import { BuilderPanelProvider } from '../../context/BuilderPanelContext'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
@@ -38,6 +39,13 @@ const PANEL_ANIMATION_MS = 300
 const PANEL_TRANSITION_CLASS = 'transition-[flex-grow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]'
 
 export default function BuilderShell({ children }) {
+  // The route lives above BuilderShell (App renders <Routes> as its
+  // children), but TopNav's own controls need to know whether the current
+  // page is a case study — useMatch works from anywhere under the Router,
+  // regardless of tree position, so this doesn't need threading through App.
+  const caseStudyMatch = useMatch('/projects/:slug')
+  const { pathname } = useLocation()
+
   const canvasRef = useRef(null)
   const groupRef = useRef(null)
   const mainGroupRef = useRef(null)
@@ -120,6 +128,15 @@ export default function BuilderShell({ children }) {
     // The canvas div is two different DOM nodes depending on isCompact (full-
     // width vs. split with the themes rail) — reattach when that swaps.
   }, [isCompact])
+
+  // React Router doesn't reset scroll on navigation — that's normally
+  // <ScrollRestoration>'s job against `window`, but this app's scrollable
+  // element is this custom div, not the window, so it isn't covered. Without
+  // this, navigating to a shorter page (e.g. home -> a project) keeps
+  // whatever scrollTop the previous page was at, landing mid-content.
+  useEffect(() => {
+    if (canvasRef.current) canvasRef.current.scrollTop = 0
+  }, [pathname])
 
   function pxToPercent(px) {
     return groupWidth > 0 ? (px / groupWidth) * 100 : 0
@@ -235,6 +252,7 @@ export default function BuilderShell({ children }) {
                 if (panelOpen && isInsightsView) setPanelOpen(false)
                 else openInsights()
               }}
+              caseStudySlug={caseStudyMatch?.params.slug}
             />
 
             {/* Editing (hover-to-reveal actions, side-panel real estate) is

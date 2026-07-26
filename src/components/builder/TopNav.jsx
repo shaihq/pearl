@@ -1,13 +1,139 @@
-import { BarChart3, ExternalLink, Globe, Link2, Palette, Pencil } from 'lucide-react'
+import { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  ArrowLeft,
+  BarChart3,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  Globe,
+  Link2,
+  Loader2,
+  Lock,
+  Palette,
+  Pencil,
+  Sparkles,
+} from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Switch } from '@/components/ui/switch'
 import MobileNav from './MobileNav'
 import PearlLogo from './PearlLogo'
 import SparkleIcon from './SparkleIcon'
 
-export default function TopNav({ themesOpen, onThemesClick, insightsOpen, onInsightsClick }) {
+// Every control on this bar stays fixed-dark regardless of the template's
+// active theme (same reasoning as the rest of the builder chrome), so the
+// checked state uses a literal accent color rather than var(--primary) —
+// that token flips with the template theme and isn't guaranteed to read as
+// "on" against this bar's own always-dark surface.
+const SWITCH_CLASS = 'data-[state=checked]:bg-[#FF553E] data-[state=unchecked]:bg-white/15'
+const SWITCH_THUMB_CLASS = 'bg-white'
+
+const OUTLINE_BUTTON_CLASS = 'border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white'
+
+// Quick + subtle: a small fade/slide, not a production number — this is a
+// toolbar swapping contents, not a page transition.
+const SWAP_TRANSITION = { duration: 0.15, ease: 'easeOut' }
+const swapVariants = {
+  initial: { opacity: 0, y: 4 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -4 },
+}
+
+function HideToggle() {
+  const [hidden, setHidden] = useState(false)
+
+  return (
+    <label className="flex h-7 items-center gap-1.5 rounded-md border border-white/15 px-2.5 text-xs text-white select-none">
+      {hidden ? <EyeOff className="size-3.5 text-white/60" /> : <Eye className="size-3.5 text-white/60" />}
+      Hide
+      <Switch
+        checked={hidden}
+        onCheckedChange={setHidden}
+        className={`ml-0.5 ${SWITCH_CLASS}`}
+        thumbClassName={SWITCH_THUMB_CLASS}
+      />
+    </label>
+  )
+}
+
+function PasswordProtectControl() {
+  const [enabled, setEnabled] = useState(false)
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="xs"
+          className={OUTLINE_BUTTON_CLASS + (enabled ? ' bg-white/10' : '')}
+        >
+          <Lock />
+          Password protect
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-72 border-white/10 bg-[#18181b] text-white">
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10">
+            <Lock className="size-4 text-white/70" />
+          </span>
+          <div className="flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium text-white">Password protect</p>
+              <Switch checked={enabled} onCheckedChange={setEnabled} className={SWITCH_CLASS} thumbClassName={SWITCH_THUMB_CLASS} />
+            </div>
+            <p className="mt-1 text-xs text-white/50">Require a password to view this case study.</p>
+          </div>
+        </div>
+
+        {enabled && (
+          <Input
+            type="password"
+            placeholder="Set a password"
+            className="mt-3 border-white/10 bg-white/5 text-xs text-white placeholder:text-white/30 focus-visible:ring-white/20"
+          />
+        )}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+function AnalyzeButton() {
+  const [analyzing, setAnalyzing] = useState(false)
+
+  function handleClick() {
+    setAnalyzing(true)
+    setTimeout(() => setAnalyzing(false), 1600)
+  }
+
+  return (
+    <Button
+      variant="outline"
+      size="xs"
+      onClick={handleClick}
+      disabled={analyzing}
+      className={OUTLINE_BUTTON_CLASS + ' disabled:opacity-100'}
+    >
+      {analyzing ? <Loader2 className="animate-spin" /> : <Sparkles />}
+      {analyzing ? 'Analyzing…' : 'Analyze using AI'}
+    </Button>
+  )
+}
+
+export default function TopNav({
+  themesOpen,
+  onThemesClick,
+  insightsOpen,
+  onInsightsClick,
+  caseStudySlug,
+}) {
+  const navigate = useNavigate()
+  const isCaseStudy = Boolean(caseStudySlug)
+
   return (
     <header className="h-14 shrink-0 flex items-center px-4 border-b border-white/10 bg-[#18181b] text-white">
       {/* Mobile: hamburger (opens consolidated nav) + logo, Publish + avatar stay reachable */}
@@ -30,58 +156,108 @@ export default function TopNav({ themesOpen, onThemesClick, insightsOpen, onInsi
 
       {/* Desktop */}
       <div className="hidden md:flex w-full items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="secondary" size="xs" className="bg-white/10 text-white hover:bg-white/15">
-            <SparkleIcon />
-            Upgrade
-          </Button>
-
-          <div className="relative w-64">
-            <Link2 className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-white/50" />
-            <Input
-              readOnly
-              defaultValue="yourname.pearl.dev/"
-              className="h-7 rounded-md border-white/10 bg-white/5 pl-8 pr-7 text-xs text-white/70 focus-visible:ring-white/20"
-            />
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              className="absolute right-0.5 top-1/2 -translate-y-1/2 text-white/50 hover:bg-white/10 hover:text-white"
+        <AnimatePresence mode="wait" initial={false}>
+          {isCaseStudy ? (
+            <motion.div
+              key="case-study-left"
+              variants={swapVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={SWAP_TRANSITION}
+              className="flex items-center"
             >
-              <Pencil />
-            </Button>
-          </div>
+              <Button variant="outline" size="xs" onClick={() => navigate('/')} className={OUTLINE_BUTTON_CLASS}>
+                <ArrowLeft />
+                Back
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="home-left"
+              variants={swapVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={SWAP_TRANSITION}
+              className="flex items-center gap-3"
+            >
+              <Button variant="secondary" size="xs" className="bg-white/10 text-white hover:bg-white/15">
+                <SparkleIcon />
+                Upgrade
+              </Button>
 
-          <Button variant="ghost" size="icon-xs" className="text-white/60 hover:bg-white/10 hover:text-white">
-            <ExternalLink />
-          </Button>
-        </div>
+              <div className="relative w-64">
+                <Link2 className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-white/50" />
+                <Input
+                  readOnly
+                  defaultValue="yourname.pearl.dev/"
+                  className="h-7 rounded-md border-white/10 bg-white/5 pl-8 pr-7 text-xs text-white/70 focus-visible:ring-white/20"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  className="absolute right-0.5 top-1/2 -translate-y-1/2 text-white/50 hover:bg-white/10 hover:text-white"
+                >
+                  <Pencil />
+                </Button>
+              </div>
+
+              <Button variant="ghost" size="icon-xs" className="text-white/60 hover:bg-white/10 hover:text-white">
+                <ExternalLink />
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="xs"
-            onClick={onThemesClick}
-            className={
-              'border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white' +
-              (themesOpen ? ' bg-white/10' : '')
-            }
-          >
-            <Palette />
-            Themes
-          </Button>
-          <Button
-            variant="outline"
-            size="xs"
-            onClick={onInsightsClick}
-            className={
-              'border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white' +
-              (insightsOpen ? ' bg-white/10' : '')
-            }
-          >
-            <BarChart3 />
-            Insights
-          </Button>
+          <AnimatePresence mode="wait" initial={false}>
+            {isCaseStudy ? (
+              <motion.div
+                key="case-study-right"
+                variants={swapVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={SWAP_TRANSITION}
+                className="flex items-center gap-2"
+              >
+                <HideToggle />
+                <PasswordProtectControl />
+                <AnalyzeButton />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="home-right"
+                variants={swapVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={SWAP_TRANSITION}
+                className="flex items-center gap-2"
+              >
+                <Button
+                  variant="outline"
+                  size="xs"
+                  onClick={onThemesClick}
+                  className={OUTLINE_BUTTON_CLASS + (themesOpen ? ' bg-white/10' : '')}
+                >
+                  <Palette />
+                  Themes
+                </Button>
+                <Button
+                  variant="outline"
+                  size="xs"
+                  onClick={onInsightsClick}
+                  className={OUTLINE_BUTTON_CLASS + (insightsOpen ? ' bg-white/10' : '')}
+                >
+                  <BarChart3 />
+                  Insights
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <Button size="xs" className="bg-[#FF553E] text-white hover:bg-[#e6472f]">
             <Globe />
             Publish
