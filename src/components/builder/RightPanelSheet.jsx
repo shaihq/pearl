@@ -2,9 +2,11 @@ import { X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
-import ThemesPanel from './ThemesPanel'
 
-export default function ThemesSheet({ open, onClose }) {
+// Bottom-sheet home for the builder's right-hand panel on mobile/iPad —
+// shows whatever's currently active (Themes or a section editor), so it
+// carries a generic title + children rather than owning specific content.
+export default function RightPanelSheet({ open, onClose, title, children }) {
   return (
     <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
       <SheetContent
@@ -16,7 +18,7 @@ export default function ThemesSheet({ open, onClose }) {
         </div>
 
         <div className="flex h-12 shrink-0 items-center justify-between px-4">
-          <SheetTitle className="text-sm font-semibold text-white">Themes</SheetTitle>
+          <SheetTitle className="text-sm font-semibold text-white">{title}</SheetTitle>
           <Button
             variant="ghost"
             size="icon-xs"
@@ -33,11 +35,9 @@ export default function ThemesSheet({ open, onClose }) {
           doesn't reliably inherit the parent's flex-resolved (definite)
           height for percentage purposes, so it grows to fit its content
           instead of clipping to it, and the `overflow-y-auto` panes inside
-          ThemesPanel never get a bounded box to actually scroll within.
+          the panel never get a bounded box to actually scroll within.
         */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <ThemesPanel hideHeader onClose={onClose} />
-        </div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
       </SheetContent>
     </Sheet>
   )

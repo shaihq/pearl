@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import BuilderShell from './components/builder/BuilderShell'
+import EditableSection from './components/builder/EditableSection'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import FeaturedProject from './components/FeaturedProject'
@@ -28,20 +29,42 @@ export default function App() {
           <SmoothScroll extraScroll={footerHeight}>
             <div className="pt-24">
               <div className="max-w-7xl mx-auto px-6 sm:px-8">
-                <Hero />
-                <FeaturedProject />
-                <ProjectGrid />
+                <EditableSection sectionKey="hero" label="Hero" actions={['edit']}>
+                  <Hero />
+                </EditableSection>
 
-                <AboutMe />
+                <EditableSection
+                  sectionKey="projects"
+                  label="Projects"
+                  actions={['edit', { key: 'add', label: 'Add project' }, 'hide', 'rearrange']}
+                >
+                  <FeaturedProject />
+                  <ProjectGrid />
+                </EditableSection>
 
-                <WorkExperience />
+                <EditableSection sectionKey="about" label="About Me" actions={['edit', 'hide']}>
+                  <AboutMe />
+                </EditableSection>
 
-                <Testimonials />
+                <EditableSection sectionKey="work" label="Work Experience" actions={['edit', 'hide', 'rearrange']}>
+                  <WorkExperience />
+                </EditableSection>
+
+                <EditableSection sectionKey="testimonials" label="Testimonials" actions={['edit', 'hide', 'rearrange']}>
+                  <Testimonials />
+                </EditableSection>
               </div>
             </div>
           </SmoothScroll>
 
-          <Footer onHeightChange={handleFooterHeight} />
+          <EditableSection
+            sectionKey="footer"
+            label="Footer"
+            actions={['edit']}
+            wrapperClassName="fixed inset-x-0 bottom-0 z-0"
+          >
+            <Footer onHeightChange={handleFooterHeight} />
+          </EditableSection>
         </CursorProvider>
       </BuilderShell>
     </ThemeProvider>

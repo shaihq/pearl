@@ -18,7 +18,7 @@ export default function Footer({ onHeightChange }) {
   return (
     <footer
       ref={footerRef}
-      className="fixed inset-x-0 bottom-0 z-0 bg-[var(--surface-strong)] text-white px-6 sm:px-8 pt-16 pb-6 transition-colors duration-500"
+      className="bg-[var(--surface-strong)] text-white px-6 sm:px-8 pt-16 pb-6 transition-colors duration-500"
     >
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between gap-10">

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Eye, GripVertical, LayoutTemplate, X } from 'lucide-react'
+import { Check, Eye, GripVertical, LayoutTemplate } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { THEME_ORDER, useTheme } from '../../context/ThemeContext'
+import PanelHeader from './PanelHeader'
 
 const PANEL_TABS = [
   { value: 'templates', label: 'Templates' },
@@ -73,19 +73,7 @@ export default function ThemesPanel({ onClose, hideHeader = false }) {
     // the panel reveal it via clipping, not squishing; dragging the panel
     // wider than this later still grows the content normally.
     <div className="flex h-full min-w-[260px] flex-col bg-[#18181b] text-white">
-      {!hideHeader && (
-        <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 px-4">
-          <span className="text-sm font-semibold">Themes</span>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={onClose}
-            className="text-white/60 hover:bg-white/10 hover:text-white"
-          >
-            <X />
-          </Button>
-        </div>
-      )}
+      {!hideHeader && <PanelHeader title="Themes" onClose={onClose} />}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col overflow-hidden px-4 py-3">
         <TabsList className="bg-white/5">

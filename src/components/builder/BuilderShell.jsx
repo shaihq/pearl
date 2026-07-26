@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { CanvasProvider } from '../../context/CanvasContext'
+import { BuilderPanelProvider } from '../../context/BuilderPanelContext'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import LeftNav from './LeftNav'
+import RightPanelSheet from './RightPanelSheet'
+import SectionEditorPanel from './SectionEditorPanel'
 import ThemesPanel from './ThemesPanel'
-import ThemesSheet from './ThemesSheet'
 import TopNav from './TopNav'
 
 // react-resizable-panels only understands percentages, but the left rail
@@ -50,7 +52,12 @@ export default function BuilderShell({ children }) {
   // panel's width, not the full window width.
   const [mainWidth, setMainWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1200))
   const [leftExpanded, setLeftExpanded] = useState(false)
-  const [themesOpen, setThemesOpen] = useState(false)
+  // Whether the right-hand panel is open, and separately what it's showing —
+  // Themes or a given section's editor. Kept apart from panelOpen so
+  // switching between the two (panel already open) is an instant content
+  // swap instead of a close/reopen animation.
+  const [panelOpen, setPanelOpenState] = useState(false)
+  const [panelView, setPanelView] = useState({ type: 'themes' })
   const [isPanelAnimating, setIsPanelAnimating] = useState(false)
   const [isCompact, setIsCompact] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth < COMPACT_BREAKPOINT_PX : false
@@ -82,12 +89,12 @@ export default function BuilderShell({ children }) {
   }, [])
 
   // Crossing back over the breakpoint while the sheet was open swaps in a
-  // fresh (collapsed-by-default) side panel — re-expand it so the themes UI
+  // fresh (collapsed-by-default) side panel — re-expand it so the panel
   // stays open across the transition instead of silently vanishing.
   useEffect(() => {
-    if (isCompact || !themesOpen) return
+    if (isCompact || !panelOpen) return
     themesPanelRef.current?.expand()
-  }, [isCompact, themesOpen])
+  }, [isCompact, panelOpen])
 
   useEffect(() => {
     const el = canvasRef.current
@@ -134,11 +141,11 @@ export default function BuilderShell({ children }) {
     else panel.collapse()
   }
 
-  function setThemesPanelOpen(open) {
-    // Compact mode renders the themes UI as a Sheet, not a resizable panel —
+  function setPanelOpen(open) {
+    // Compact mode renders the panel as a Sheet, not a resizable panel —
     // there's no imperative panel handle to drive, just the open state.
     if (isCompact) {
-      setThemesOpen(open)
+      setPanelOpenState(open)
       return
     }
     const panel = themesPanelRef.current
@@ -148,101 +155,138 @@ export default function BuilderShell({ children }) {
     else panel.collapse()
   }
 
+  function openThemes() {
+    setPanelView({ type: 'themes' })
+    setPanelOpen(true)
+  }
+
+  function openSection(sectionKey, label) {
+    setPanelView({ type: 'section', sectionKey, label })
+    setPanelOpen(true)
+  }
+
   useEffect(() => {
-    if (!themesOpen) return
+    if (!panelOpen) return
     function handleKeyDown(e) {
-      if (e.key === 'Escape') setThemesPanelOpen(false)
+      if (e.key === 'Escape') setPanelOpen(false)
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [themesOpen])
+  }, [panelOpen])
+
+  const isThemesView = panelView.type === 'themes'
+  const panelTitle = isThemesView ? 'Themes' : `Edit ${panelView.label}`
+
+  function renderPanelContent(hideHeader) {
+    if (isThemesView) return <ThemesPanel hideHeader={hideHeader} onClose={() => setPanelOpen(false)} />
+    return (
+      <SectionEditorPanel
+        hideHeader={hideHeader}
+        sectionKey={panelView.sectionKey}
+        label={panelView.label}
+        onClose={() => setPanelOpen(false)}
+      />
+    )
+  }
 
   const panelTransitionClass = isPanelAnimating ? PANEL_TRANSITION_CLASS : ''
 
   return (
-    <div ref={groupRef} className="h-screen w-screen bg-[#18181b]">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel
-          ref={leftPanelRef}
-          id="leftnav"
-          order={1}
-          collapsible
-          collapsedSize={pxToPercent(LEFT_COLLAPSED_PX)}
-          defaultSize={pxToPercent(LEFT_COLLAPSED_PX)}
-          minSize={pxToPercent(LEFT_MIN_PX)}
-          maxSize={pxToPercent(LEFT_MAX_PX)}
-          onCollapse={() => setLeftExpanded(false)}
-          onExpand={() => setLeftExpanded(true)}
-          className={`hidden md:block ${panelTransitionClass}`}
-        >
-          <LeftNav expanded={leftExpanded} onToggle={() => setLeftNavOpen(!leftExpanded)} />
-        </ResizablePanel>
+    <BuilderPanelProvider openSection={openSection}>
+      <div ref={groupRef} className="h-screen w-screen bg-[#18181b]">
+        <ResizablePanelGroup direction="horizontal">
+          <ResizablePanel
+            ref={leftPanelRef}
+            id="leftnav"
+            order={1}
+            collapsible
+            collapsedSize={pxToPercent(LEFT_COLLAPSED_PX)}
+            defaultSize={pxToPercent(LEFT_COLLAPSED_PX)}
+            minSize={pxToPercent(LEFT_MIN_PX)}
+            maxSize={pxToPercent(LEFT_MAX_PX)}
+            onCollapse={() => setLeftExpanded(false)}
+            onExpand={() => setLeftExpanded(true)}
+            className={`hidden md:block ${panelTransitionClass}`}
+          >
+            <LeftNav expanded={leftExpanded} onToggle={() => setLeftNavOpen(!leftExpanded)} />
+          </ResizablePanel>
 
-        <ResizableHandle className="hidden md:flex bg-white/10 data-[resize-handle-state=hover]:bg-white/20 data-[resize-handle-state=drag]:bg-white/20" />
+          <ResizableHandle className="hidden md:flex bg-white/10 data-[resize-handle-state=hover]:bg-white/20 data-[resize-handle-state=drag]:bg-white/20" />
 
-        <ResizablePanel id="main" order={2} className="flex flex-col">
-          <TopNav themesOpen={themesOpen} onThemesClick={() => setThemesPanelOpen(!themesOpen)} />
+          <ResizablePanel id="main" order={2} className="flex flex-col">
+            <TopNav
+              themesOpen={panelOpen && isThemesView}
+              onThemesClick={() => {
+                if (panelOpen && isThemesView) setPanelOpen(false)
+                else openThemes()
+              }}
+            />
 
-          {isCompact ? (
-            // Below the compact breakpoint there's no room for a themes side
-            // rail, so the canvas takes the full width and Themes moves into
-            // the bottom sheet mounted below instead.
-            <div className="relative flex-1 overflow-hidden contain-layout bg-[var(--background)]">
-              <div ref={canvasRef} className="h-full w-full overflow-y-auto overflow-x-hidden">
-                <CanvasProvider containerRef={canvasRef}>{children}</CanvasProvider>
+            {isCompact ? (
+              // Below the compact breakpoint there's no room for a side
+              // rail, so the canvas takes the full width and the panel moves
+              // into the bottom sheet mounted below instead.
+              <div className="relative flex-1 overflow-hidden contain-layout bg-[var(--background)]">
+                <div ref={canvasRef} className="h-full w-full overflow-y-auto overflow-x-hidden">
+                  <CanvasProvider containerRef={canvasRef}>{children}</CanvasProvider>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div ref={mainGroupRef} className="flex-1 overflow-hidden">
-              <ResizablePanelGroup direction="horizontal">
-                {/*
-                  Two nested divs inside this panel on purpose: the outer one is
-                  the non-scrolling containing block for `fixed` descendants
-                  (masks them to the canvas instead of the real viewport). The
-                  inner one is what actually scrolls. Fixed elements must NOT
-                  move when the thing that establishes their containing block
-                  also scrolls — mixing both roles into one div drags fixed
-                  content along with native scroll on top of any JS
-                  scroll-linked transform, double-moving it.
-                */}
-                <ResizablePanel
-                  id="canvas"
-                  order={1}
-                  defaultSize={100}
-                  minSize={30}
-                  className={`relative overflow-hidden contain-layout bg-[var(--background)] ${panelTransitionClass}`}
-                >
-                  <div ref={canvasRef} className="h-full w-full overflow-y-auto overflow-x-hidden">
-                    <CanvasProvider containerRef={canvasRef}>{children}</CanvasProvider>
-                  </div>
-                </ResizablePanel>
+            ) : (
+              <div ref={mainGroupRef} className="flex-1 overflow-hidden">
+                <ResizablePanelGroup direction="horizontal">
+                  {/*
+                    Two nested divs inside this panel on purpose: the outer one is
+                    the non-scrolling containing block for `fixed` descendants
+                    (masks them to the canvas instead of the real viewport). The
+                    inner one is what actually scrolls. Fixed elements must NOT
+                    move when the thing that establishes their containing block
+                    also scrolls — mixing both roles into one div drags fixed
+                    content along with native scroll on top of any JS
+                    scroll-linked transform, double-moving it.
+                  */}
+                  <ResizablePanel
+                    id="canvas"
+                    order={1}
+                    defaultSize={100}
+                    minSize={30}
+                    className={`relative overflow-hidden contain-layout bg-[var(--background)] ${panelTransitionClass}`}
+                  >
+                    <div ref={canvasRef} className="h-full w-full overflow-y-auto overflow-x-hidden">
+                      <CanvasProvider containerRef={canvasRef}>{children}</CanvasProvider>
+                    </div>
+                  </ResizablePanel>
 
-                <ResizableHandle
-                  className={`bg-white/10 data-[resize-handle-state=hover]:bg-white/20 data-[resize-handle-state=drag]:bg-white/20 ${themesOpen ? '' : 'hidden'}`}
-                />
+                  <ResizableHandle
+                    className={`bg-white/10 data-[resize-handle-state=hover]:bg-white/20 data-[resize-handle-state=drag]:bg-white/20 ${panelOpen ? '' : 'hidden'}`}
+                  />
 
-                <ResizablePanel
-                  ref={themesPanelRef}
-                  id="themes"
-                  order={2}
-                  collapsible
-                  collapsedSize={0}
-                  defaultSize={0}
-                  minSize={pxToPercentMain(THEMES_MIN_PX)}
-                  maxSize={pxToPercentMain(THEMES_MAX_PX)}
-                  onCollapse={() => setThemesOpen(false)}
-                  onExpand={() => setThemesOpen(true)}
-                  className={panelTransitionClass}
-                >
-                  <ThemesPanel onClose={() => setThemesPanelOpen(false)} />
-                </ResizablePanel>
-              </ResizablePanelGroup>
-            </div>
-          )}
-        </ResizablePanel>
-      </ResizablePanelGroup>
+                  <ResizablePanel
+                    ref={themesPanelRef}
+                    id="themes"
+                    order={2}
+                    collapsible
+                    collapsedSize={0}
+                    defaultSize={0}
+                    minSize={pxToPercentMain(THEMES_MIN_PX)}
+                    maxSize={pxToPercentMain(THEMES_MAX_PX)}
+                    onCollapse={() => setPanelOpenState(false)}
+                    onExpand={() => setPanelOpenState(true)}
+                    className={panelTransitionClass}
+                  >
+                    {renderPanelContent(false)}
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              </div>
+            )}
+          </ResizablePanel>
+        </ResizablePanelGroup>
 
-      {isCompact && <ThemesSheet open={themesOpen} onClose={() => setThemesPanelOpen(false)} />}
-    </div>
+        {isCompact && (
+          <RightPanelSheet open={panelOpen} onClose={() => setPanelOpen(false)} title={panelTitle}>
+            {renderPanelContent(true)}
+          </RightPanelSheet>
+        )}
+      </div>
+    </BuilderPanelProvider>
   )
 }
