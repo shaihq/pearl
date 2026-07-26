@@ -3,6 +3,7 @@ import DazzleCard from './cards/DazzleCard'
 import HealthcareCard from './cards/HealthcareCard'
 import InfographicCard from './cards/InfographicCard'
 import AppPluginCard from './cards/AppPluginCard'
+import EditableItem from './builder/EditableItem'
 import { useCursor } from '../context/CursorContext'
 import { quickContainer, revealBT, viewport } from '../motion'
 
@@ -32,11 +33,13 @@ export default function ProjectGrid() {
           onMouseEnter={show}
           onMouseLeave={hide}
         >
-          <Card />
-          <div className="mt-4 flex flex-col gap-0.5">
-            <p className="text-xs text-[var(--muted)]">{client}</p>
-            <p className="text-sm font-medium text-[var(--primary)]">{title}</p>
-          </div>
+          <EditableItem itemLabel={title} sectionKey="projects" sectionLabel="Projects">
+            <Card />
+            <div className="mt-4 flex flex-col gap-0.5">
+              <p className="text-xs text-[var(--muted)]">{client}</p>
+              <p className="text-sm font-medium text-[var(--primary)]">{title}</p>
+            </div>
+          </EditableItem>
         </motion.div>
       ))}
     </motion.section>

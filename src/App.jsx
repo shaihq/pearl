@@ -36,7 +36,7 @@ export default function App() {
                 <EditableSection
                   sectionKey="projects"
                   label="Projects"
-                  actions={['edit', { key: 'add', label: 'Add project' }, 'hide', 'rearrange']}
+                  actions={[{ key: 'add', label: 'Add project' }, 'hide', 'rearrange']}
                 >
                   <FeaturedProject />
                   <ProjectGrid />

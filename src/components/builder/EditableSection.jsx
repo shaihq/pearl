@@ -1,28 +1,14 @@
-import { ArrowUpDown, EyeOff, Pencil, Plus } from 'lucide-react'
-
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useBuilderPanel } from '../../context/BuilderPanelContext'
+import { resolveAction } from './panelActions'
 
 // Builder chrome, not template content — always renders in the dark
 // nav-shell style (bg-[#18181b]/white text/white-10 borders, same classes
 // LeftNav's NavIcon uses) regardless of the template's own active theme. The
 // outline ring uses the template's --accent so it still reads as "this
 // section, in this theme" rather than a generic overlay.
-const ACTION_CONFIG = {
-  edit: { icon: Pencil, label: 'Edit' },
-  add: { icon: Plus, label: 'Add' },
-  hide: { icon: EyeOff, label: 'Hide section' },
-  rearrange: { icon: ArrowUpDown, label: 'Rearrange' },
-}
-
 const DEFAULT_ACTIONS = ['edit', 'hide', 'rearrange']
-
-function resolveAction(action) {
-  const key = typeof action === 'string' ? action : action.key
-  const overrides = typeof action === 'string' ? null : action
-  return { ...ACTION_CONFIG[key], key, ...overrides }
-}
 
 export default function EditableSection({
   sectionKey,
