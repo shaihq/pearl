@@ -20,13 +20,17 @@ const NAV_ITEMS = [
 // portfolio preview, so it shouldn't shift with the template's own theme.
 const OUTLINE_BUTTON_CLASS = 'border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white'
 
+function Divider() {
+  return <div className="h-px bg-white/10" />
+}
+
 function AccountPanel() {
   return (
     <div className="space-y-6">
       <section>
         <h2 className="text-lg font-semibold text-white">Profile</h2>
-        <div className="mt-3 h-px bg-white/10" />
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-3 mb-4 h-px bg-white/10" />
+        <div className="flex items-center gap-3">
           <Avatar className="size-12">
             <AvatarFallback className="bg-white/10 text-sm text-white">P</AvatarFallback>
           </Avatar>
@@ -37,8 +41,28 @@ function AccountPanel() {
         </div>
       </section>
 
-      <div className="h-px bg-white/10" />
+      <Divider />
 
+      <section>
+        <h2 className="text-lg font-semibold text-white">System</h2>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-white">Sign out from this device</p>
+            <p className="text-xs text-white/50">You are signed in as you@example.com</p>
+          </div>
+          <Button variant="outline" size="sm" className={OUTLINE_BUTTON_CLASS}>
+            <LogOut className="size-4" />
+            Sign out
+          </Button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function DomainsPanel() {
+  return (
+    <div className="space-y-6">
       <section>
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-white">Base domain</h2>
@@ -59,7 +83,7 @@ function AccountPanel() {
             />
             <span className="shrink-0 text-sm text-white/40">.pearl.dev</span>
           </div>
-          <Button variant="outline" size="sm" className={OUTLINE_BUTTON_CLASS}>
+          <Button variant="outline" className={OUTLINE_BUTTON_CLASS}>
             Change username
           </Button>
         </div>
@@ -76,37 +100,79 @@ function AccountPanel() {
         </div>
       </section>
 
-      <div className="h-px bg-white/10" />
+      <Divider />
 
       <section>
-        <h2 className="text-lg font-semibold text-white">System</h2>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-white">Sign out from this device</p>
-            <p className="text-xs text-white/50">You are signed in as you@example.com</p>
-          </div>
-          <Button variant="outline" size="sm" className={OUTLINE_BUTTON_CLASS}>
-            <LogOut className="size-4" />
-            Sign out
-          </Button>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-white">Custom domain</h2>
+          <span className="rounded-full bg-[#FF553E] px-2 py-0.5 text-xs font-semibold text-white">PRO</span>
+        </div>
+        <p className="mt-2 text-xs text-white/50">Use your own domain — make your portfolio truly yours</p>
+
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input
+            placeholder="www.site.com"
+            className="h-9 flex-1 rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white outline-none placeholder:text-white/30"
+          />
+          <Button className="bg-white text-[#0a0a0a] hover:bg-white/90">Add domain</Button>
         </div>
       </section>
     </div>
   )
 }
 
-function ComingSoonPanel({ label }) {
+function SubscriptionPanel() {
   return (
-    <div className="flex h-full min-h-60 flex-col items-center justify-center gap-1 text-center">
-      <p className="text-sm font-medium text-white">{label}</p>
-      <p className="text-xs text-white/40">Coming soon.</p>
+    <div className="space-y-6">
+      <section>
+        <h2 className="text-lg font-semibold text-white">Plan &amp; Billing</h2>
+        <div className="mt-3 mb-4 h-px bg-white/10" />
+        <div className="divide-y divide-white/10 rounded-lg border border-white/10">
+          <div className="flex items-center justify-between px-4 py-3 text-sm">
+            <span className="text-white/50">Plan</span>
+            <span className="font-medium text-white">Lifetime</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 text-sm">
+            <span className="text-white/50">Status</span>
+            <span className="flex items-center gap-1.5 font-medium text-emerald-400">
+              <span className="size-1.5 rounded-full bg-emerald-400" />
+              Active
+            </span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 text-sm">
+            <span className="text-white/50">Renews on</span>
+            <span className="font-medium text-white">Dec 10, 2027</span>
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      <p className="text-sm text-white/50">
+        Questions?{' '}
+        <a href="mailto:support@pearl.dev" className="text-white underline underline-offset-2 hover:text-white/80">
+          support@pearl.dev
+        </a>
+      </p>
     </div>
+  )
+}
+
+function SecurityPanel() {
+  return (
+    <section>
+      <h2 className="text-lg font-semibold text-white">Danger zone</h2>
+      <p className="mt-1 text-xs text-white/50">Delete your account and account data. This can't be undone.</p>
+      <Button className="mt-4 bg-red-600 text-white hover:bg-red-500">Delete account</Button>
+    </section>
   )
 }
 
 function PanelBody({ activeTab }) {
   if (activeTab === 'account') return <AccountPanel />
-  return <ComingSoonPanel label={NAV_ITEMS.find((item) => item.key === activeTab)?.label} />
+  if (activeTab === 'domains') return <DomainsPanel />
+  if (activeTab === 'subscription') return <SubscriptionPanel />
+  return <SecurityPanel />
 }
 
 function DesktopNav({ activeTab, onSelect }) {
