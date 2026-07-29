@@ -22,7 +22,12 @@ const THEME_SWATCHES = {
   blossom: { label: 'Blossom', background: '#fae8ff', card: '#fdf4ff', primary: '#4a044e', accent: '#d946ef' },
 }
 
-const MOCK_TEMPLATES = ['Template 1', 'Template 2', 'Template 3', 'Template 4']
+const MOCK_TEMPLATES = [
+  { id: 'aurora', name: 'Aurora' },
+  { id: 'monolith', name: 'Monolith' },
+  { id: 'atlas', name: 'Atlas' },
+  { id: 'nova', name: 'Nova' },
+]
 
 const MOCK_SECTIONS = ['Hero', 'Featured Project', 'Projects', 'About Me', 'Work Experience', 'Testimonials']
 
@@ -60,9 +65,45 @@ function ColorSwatch({ id, active, onSelect }) {
   )
 }
 
+function TemplateCard({ name, active, onSelect }) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={active}
+        className={`relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl border transition-all duration-200 ease-out ${
+          active ? 'border-white/40 ring-2 ring-white/20' : 'border-white/10 hover:border-white/25'
+        }`}
+      >
+        {/* placeholder for the template's preview image */}
+        <div className="flex h-full w-full items-center justify-center bg-white/5 text-white/30">
+          <LayoutTemplate className="h-6 w-6" />
+        </div>
+
+        {active && (
+          <motion.span
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', bounce: 0.4, duration: 0.4 }}
+            className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white"
+          >
+            <Check className="h-2.5 w-2.5 text-black" />
+          </motion.span>
+        )}
+      </button>
+
+      <span className={`text-xs transition-colors duration-200 ${active ? 'text-white' : 'text-white/50'}`}>
+        {name}
+      </span>
+    </div>
+  )
+}
+
 export default function ThemesPanel({ onClose, hideHeader = false }) {
   const { theme, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState('templates')
+  const [selectedTemplate, setSelectedTemplate] = useState(MOCK_TEMPLATES[0].id)
 
   return (
     // min-w matches BuilderShell's THEMES_MIN_PX. The side panel animates its
@@ -97,14 +138,13 @@ export default function ThemesPanel({ onClose, hideHeader = false }) {
 
         <TabsContent value="templates" className="mt-3 overflow-y-auto">
           <div className={`grid ${GRID_COLS_CLASS} gap-2.5`}>
-            {MOCK_TEMPLATES.map((name) => (
-              <div
-                key={name}
-                className="flex aspect-video cursor-not-allowed flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/10 bg-white/5 text-white/30"
-              >
-                <LayoutTemplate className="h-5 w-5" />
-                <span className="text-xs">{name}</span>
-              </div>
+            {MOCK_TEMPLATES.map(({ id, name }) => (
+              <TemplateCard
+                key={id}
+                name={name}
+                active={selectedTemplate === id}
+                onSelect={() => setSelectedTemplate(id)}
+              />
             ))}
           </div>
           <p className="mt-3 text-xs text-white/40">Coming soon</p>
