@@ -63,7 +63,7 @@ export default function AboutMe() {
       >
         <motion.div style={{ y }} className="absolute inset-x-0 -top-[20%] h-[140%]">
           <img
-            src="/workme.webp"
+            src="/4bd851154ac889867f6c8d15dcf3b35c.jpg"
             alt="Matt at his desk"
             className="w-full h-full object-cover"
             style={{ objectPosition: '50% 35%' }}

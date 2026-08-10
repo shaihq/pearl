@@ -50,7 +50,7 @@ export default function Hero() {
       <div className="order-1 flex justify-start lg:order-2">
         <motion.img
           variants={revealRL}
-          src="/faizur.jpg"
+          src="/db5f76c2a132da4d5112cf0a25466f36.jpg"
           alt="Matt"
           className="w-44 h-44 sm:w-64 sm:h-64 lg:w-80 lg:h-80 rounded-2xl border border-[var(--border)] object-cover shrink-0 shadow-xl"
         />
