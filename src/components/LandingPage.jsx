@@ -533,6 +533,9 @@ export default function LandingPage() {
               <a href="#" className="text-[var(--muted)] hover:text-[var(--primary)] transition-colors">
                 Examples
               </a>
+              <a href="#" className="text-[var(--muted)] hover:text-[var(--primary)] transition-colors">
+                Blogs
+              </a>
               <a
                 href="#"
                 className="rounded-full bg-[var(--background)] px-4 py-2 shadow-sm hover:bg-white transition-colors"
