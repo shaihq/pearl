@@ -235,9 +235,19 @@
   box-sizing: border-box;
 }
 
-html,
-body {
+/* Only html, not html+body — overflow-x:hidden on BOTH creates two
+   competing scroll containers and silently breaks position:sticky
+   anywhere in the app (it stops pinning and just scrolls away with the
+   page instead). html is the actual root scroller per spec
+   (document.scrollingElement), so it alone is enough to block horizontal
+   scroll; body doesn't need its own copy of the rule. */
+html {
   overflow-x: hidden;
+  /* proximity (not mandatory) so this only pulls toward a snap target when
+     one is already close — LandingPage's testimonial cards are the only
+     thing on the site marking scroll-snap-align, so elsewhere this is a
+     no-op. */
+  scroll-snap-type: y proximity;
 }
 
 body {
