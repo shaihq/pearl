@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { AnimatePresence, cubicBezier, motion, useScroll, useTransform } from 'framer-motion'
-import { Box, Heart, Home, LayoutGrid, Mail, MessageCircle, Palette, Sparkles, Tv, Wallet } from 'lucide-react'
+import { LayoutGrid, Sparkles } from 'lucide-react'
 import { EASE } from '../motion'
 import LandingShell from './landing/LandingShell'
 
@@ -20,24 +20,31 @@ const HEADLINE_LINES = [
 // treatment from ICON_BURST below, so this section doesn't introduce a
 // one-off color language of its own.
 const PREVIEW_TABS = [
-  { id: 'builder', label: 'Portfolio Builder', Icon: LayoutGrid, badgeBg: 'bg-blue-600', badgeFg: 'text-white' },
+  {
+    id: 'builder',
+    label: 'Portfolio Builder',
+    Icon: LayoutGrid,
+    badgeBg: 'bg-blue-600',
+    badgeFg: 'text-white',
+    video: '/companylogos/1st.mp4',
+  },
   { id: 'jobs', label: 'AI Job Matching', Icon: Sparkles, badgeBg: 'bg-violet-600', badgeFg: 'text-white' },
 ]
 
-// Generic colored app-icon badges (not real brand logos) scattered around
-// the stat block, positioned by % so the "burst from center" offset below
-// can be computed relative to each one's own spot. top/left are percentages
-// of the container. Trimmed to 8 — the original 12 read as cluttered,
-// especially once these also show on mobile.
+// Real company logos (pre-styled PNGs with their own background baked in,
+// so no bg-color class needed here) scattered around the stat block,
+// positioned by % so the "burst from center" offset below can be computed
+// relative to each one's own spot. top/left are percentages of the
+// container.
 const ICON_BURST = [
-  { Icon: Mail, top: 8, left: 14, bg: 'bg-yellow-400', fg: 'text-white' },
-  { Icon: Home, top: 6, left: 46, bg: 'bg-blue-600', fg: 'text-white' },
-  { Icon: Tv, top: 5, left: 80, bg: 'bg-zinc-900', fg: 'text-white' },
-  { Icon: Palette, top: 40, left: 10, bg: 'bg-slate-200', fg: 'text-slate-600' },
-  { Icon: MessageCircle, top: 38, left: 88, bg: 'bg-violet-600', fg: 'text-white' },
-  { Icon: Wallet, top: 78, left: 16, bg: 'bg-indigo-900', fg: 'text-white' },
-  { Icon: Heart, top: 90, left: 48, bg: 'bg-rose-500', fg: 'text-white' },
-  { Icon: Box, top: 82, left: 82, bg: 'bg-green-500', fg: 'text-white' },
+  { logo: '/companylogos/amazon.png', name: 'Amazon', top: 8, left: 14 },
+  { logo: '/companylogos/google.png', name: 'Google', top: 6, left: 46 },
+  { logo: '/companylogos/apple.png', name: 'Apple', top: 5, left: 80 },
+  { logo: '/companylogos/cisco.png', name: 'Cisco', top: 40, left: 10 },
+  { logo: '/companylogos/servicenow.png', name: 'ServiceNow', top: 38, left: 88 },
+  { logo: '/companylogos/mastercard.png', name: 'Mastercard', top: 78, left: 16 },
+  { logo: '/companylogos/razorpay.png', name: 'Razorpay', top: 90, left: 48 },
+  { logo: '/companylogos/ola.png', name: 'Ola', top: 82, left: 82 },
 ]
 
 // Icons burst outward from the center on scroll-in — each one's hidden
@@ -502,7 +509,7 @@ export default function LandingPage() {
                 })}
               </div>
 
-              <div className="relative aspect-[16/9] border border-[var(--border)] rounded-2xl bg-[var(--card)] overflow-hidden">
+              <div className="relative aspect-[133/108] border border-[var(--border)] rounded-2xl bg-[var(--card)] overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -510,13 +517,26 @@ export default function LandingPage() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.25, ease: EASE }}
-                  className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-[var(--muted)]"
+                  className="absolute inset-0"
                 >
-                  {(() => {
-                    const Icon = PREVIEW_TABS[activeTab].Icon
-                    return <Icon className="w-10 h-10" strokeWidth={1.5} />
-                  })()}
-                  <span className="text-sm font-medium">{PREVIEW_TABS[activeTab].label}</span>
+                  {PREVIEW_TABS[activeTab].video ? (
+                    <video
+                      src={PREVIEW_TABS[activeTab].video}
+                      className="w-full h-full object-cover"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-[var(--muted)]">
+                      {(() => {
+                        const Icon = PREVIEW_TABS[activeTab].Icon
+                        return <Icon className="w-10 h-10" strokeWidth={1.5} />
+                      })()}
+                      <span className="text-sm font-medium">{PREVIEW_TABS[activeTab].label}</span>
+                    </div>
+                  )}
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -554,9 +574,9 @@ export default function LandingPage() {
                 <motion.div variants={burstIconVariants(item.top, item.left)}>
                   <motion.div
                     {...floatAnimation(i)}
-                    className={`flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl ${item.bg}`}
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden"
                   >
-                    <item.Icon className={`w-6 h-6 sm:w-7 sm:h-7 ${item.fg}`} strokeWidth={2} />
+                    <img src={item.logo} alt={item.name} className="w-full h-full object-cover" />
                   </motion.div>
                 </motion.div>
               </div>
