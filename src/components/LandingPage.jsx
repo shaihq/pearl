@@ -598,7 +598,7 @@ export default function LandingPage() {
                       <p className="text-xs text-[var(--muted)]">{testimonial.role}</p>
                     </div>
                   </div>
-                  <p className="mt-4 text-sm leading-relaxed text-[var(--primary)]/80">{testimonial.quote}</p>
+                  <p className="mt-4 text-sm leading-relaxed text-[#3d3d3d]">{testimonial.quote}</p>
                 </div>
               ))}
             </div>
