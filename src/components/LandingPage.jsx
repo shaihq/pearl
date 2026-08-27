@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
-import { AnimatePresence, cubicBezier, motion, useScroll, useTransform } from 'framer-motion'
-import { LayoutGrid, Sparkles } from 'lucide-react'
+import { cubicBezier, motion, useScroll, useTransform } from 'framer-motion'
 import { EASE } from '../motion'
 import LandingShell from './landing/LandingShell'
 
@@ -12,23 +11,6 @@ const SCROLL_EASE = cubicBezier(...EASE)
 const HEADLINE_LINES = [
   ['Stop', 'losing', 'sleep'],
   ['over', 'your', 'UX', 'portfolio.'],
-]
-
-// Placeholder content only — a simple icon + label swap, not a real product
-// screenshot. Keeps the tab-switch interaction legible without pretending
-// to be a finished mockup. badgeBg/badgeFg echo the colored icon-badge
-// treatment from ICON_BURST below, so this section doesn't introduce a
-// one-off color language of its own.
-const PREVIEW_TABS = [
-  {
-    id: 'builder',
-    label: 'Portfolio Builder',
-    Icon: LayoutGrid,
-    badgeBg: 'bg-blue-600',
-    badgeFg: 'text-white',
-    video: '/companylogos/1st.mp4',
-  },
-  { id: 'jobs', label: 'AI Job Matching', Icon: Sparkles, badgeBg: 'bg-violet-600', badgeFg: 'text-white' },
 ]
 
 // Real company logos (pre-styled PNGs with their own background baked in,
@@ -331,7 +313,6 @@ function TestimonialCard({ index, total, scrollYProgress, testimonial, layout })
 
 export default function LandingPage() {
   const [videoLoaded, setVideoLoaded] = useState(false)
-  const [activeTab, setActiveTab] = useState(0)
   const [subdomain, setSubdomain] = useState('')
   const iconLayerRef = useRef(null)
 
@@ -363,7 +344,7 @@ export default function LandingPage() {
             fades in once a frame is actually decoded (onLoadedData) — a
             fixed-timing entrance would risk showing a blank/black box for
             however long the browser takes to buffer the file. */}
-        <div className="absolute inset-x-0 top-0 h-72 sm:h-96 overflow-hidden pointer-events-none z-0">
+        <div className="absolute inset-x-0 -top-10 sm:-top-12 h-[24.5rem] sm:h-[31rem] overflow-hidden pointer-events-none z-0">
           <video
             className="w-full h-full object-cover transition-opacity duration-700 ease-out"
             style={{
@@ -381,7 +362,7 @@ export default function LandingPage() {
         </div>
 
         <motion.section
-          className="relative z-10 flex flex-col items-center text-center pt-72 sm:pt-96"
+          className="relative z-10 flex flex-col items-center text-center pt-[22rem] sm:pt-[28rem]"
           variants={heroContainer}
           initial="hidden"
           whileInView="visible"
@@ -445,17 +426,17 @@ export default function LandingPage() {
                     it's the least essential part of the row, and dropping it
                     keeps "Get started" from getting cramped rather than
                     needing to shrink the button down to an icon. */}
-                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] pl-6 sm:pl-7 pr-1.5 py-1.5 shadow-sm">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] pl-5 sm:pl-6 pr-1 py-1 shadow-sm transition-shadow duration-200 ease-out focus-within:shadow-[0_0_0_4px_rgba(10,10,10,0.06)]">
                   <input
                     type="text"
                     value={subdomain}
                     onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                     placeholder="john"
-                    className="w-20 sm:w-36 bg-transparent py-3 sm:py-3.5 text-base sm:text-lg text-[var(--primary)] placeholder:text-[var(--muted)] outline-none"
+                    className="w-16 sm:w-32 bg-transparent py-2 sm:py-2.5 text-sm sm:text-base text-[var(--primary)] placeholder:text-[var(--muted)] outline-none selection:bg-[var(--primary)] selection:text-[var(--primary-foreground)]"
                   />
-                  <span className="hidden sm:block h-6 w-px bg-[var(--border)]" />
-                  <span className="hidden sm:inline pr-4 text-lg text-[var(--muted)]">.designfolio.me</span>
-                  <button className="rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] text-base sm:text-lg font-medium px-7 sm:px-8 py-3.5 sm:py-4 hover:bg-[var(--primary-hover)] transition-colors whitespace-nowrap">
+                  <span className="hidden sm:block h-5 w-px bg-[var(--border)]" />
+                  <span className="hidden sm:inline pr-3 text-base text-[var(--muted)]">.designfolio.me</span>
+                  <button className="rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] text-sm sm:text-base font-medium px-5 sm:px-6 py-2.5 sm:py-3 transition-all duration-150 ease-out hover:bg-[var(--primary-hover)] active:scale-[0.97] active:bg-[var(--primary-hover)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_rgba(10,10,10,0.35)] whitespace-nowrap">
                     Get started
                   </button>
                 </div>
@@ -463,19 +444,7 @@ export default function LandingPage() {
               </motion.div>
             </div>
 
-            {/* Tabs swap the placeholder preview below — deliberately plain
-                (icon + label, not a fake product screenshot) so the
-                interaction reads clearly without overselling the mockup.
-                Both tabs share one row, same height/padding/rounding
-                (rounded-t-2xl, -mb-px), sitting flush together directly on
-                the panel's top edge — a single attached header bar for the
-                section, not one tab floating separate from the other. The
-                active tab matches the panel's own background so it reads
-                as continuous with it, the inactive tab a step darker
-                (--secondary) so it still reads as clearly part of the
-                same bar, just not the open one.
-
-                -mx-6/-mx-8 cancels the padding this wrapper just re-added
+            {/* -mx-6/-mx-8 cancels the padding this wrapper just re-added
                 (see comment above) — a normal in-flow element (unlike the
                 video, which is absolutely positioned and so already
                 ignores that padding), so without this it stops short of
@@ -485,62 +454,17 @@ export default function LandingPage() {
                 width:auto flex child to fit its own content instead of
                 the container's width. */}
             <motion.div variants={heroReveal} className="relative self-stretch -mx-6 sm:-mx-8">
-              <div className="flex items-end justify-center gap-2 px-4">
-                {PREVIEW_TABS.map((tab, i) => {
-                  const active = activeTab === i
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(i)}
-                      className={`inline-flex items-center gap-2.5 px-4 sm:px-5 py-3 -mb-px rounded-t-2xl text-sm font-semibold transition-colors ${
-                        active
-                          ? 'bg-[var(--card)] text-[var(--primary)]'
-                          : 'bg-[var(--secondary)] text-[var(--muted)] hover:text-[var(--primary)]'
-                      }`}
-                    >
-                      <span
-                        className={`flex items-center justify-center w-6 h-6 rounded-md shrink-0 ${tab.badgeBg} ${tab.badgeFg}`}
-                      >
-                        <tab.Icon className="w-3.5 h-3.5" />
-                      </span>
-                      <span className="hidden sm:inline">{tab.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-
               <div className="relative aspect-[133/108] border border-[var(--border)] rounded-2xl bg-[var(--card)] overflow-hidden">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25, ease: EASE }}
-                  className="absolute inset-0"
-                >
-                  {PREVIEW_TABS[activeTab].video ? (
-                    <video
-                      src={PREVIEW_TABS[activeTab].video}
-                      className="w-full h-full object-cover"
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-[var(--muted)]">
-                      {(() => {
-                        const Icon = PREVIEW_TABS[activeTab].Icon
-                        return <Icon className="w-10 h-10" strokeWidth={1.5} />
-                      })()}
-                      <span className="text-sm font-medium">{PREVIEW_TABS[activeTab].label}</span>
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </motion.div>
+                <video
+                  src="/companylogos/1st.mp4"
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              </div>
+            </motion.div>
           </div>
 
           {/* Independent scroll trigger (its own initial/whileInView, not

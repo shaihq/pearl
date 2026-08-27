@@ -61,31 +61,13 @@ export default function LandingShell({ children }) {
       style={{ ...LIGHT_THEME_VARS, fontFamily: "'Manrope', sans-serif" }}
       className="relative min-h-screen bg-[var(--background)] text-[var(--primary)] pt-10 sm:pt-12"
     >
-      {/* A second top rule at the true top of the page (not the inset frame
-          below, which only starts after the pt- gap), with short corner
-          ticks bridging down to where that inset frame's own top border
-          starts — closes off the gap the floating nav sits in. Width-matched
-          to the frame (max-w-[1400px] + px) instead of the viewport, so it
-          lines up directly above it rather than spanning edge to edge. */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, ease: EASE }}
-        className="relative max-w-[1400px] mx-auto px-6 sm:px-8"
-      >
-        <div className="absolute inset-x-0 top-0 h-px bg-[var(--border)] z-20 pointer-events-none" />
-        <div className="absolute left-0 top-0 h-10 sm:h-12 w-px bg-[var(--border)] z-20 pointer-events-none" />
-        <div className="absolute right-0 top-0 h-10 sm:h-12 w-px bg-[var(--border)] z-20 pointer-events-none" />
-      </motion.div>
-
-      {/* Left, right AND top borders — a continuous frame open only at the
-          bottom, running the full page height (min-h-screen so it still
-          reaches the bottom on short pages). Inset from the true screen
-          edges (max-w-[1400px] + px, same as the reference) rather than
-          full-bleed — there's visible page background outside the lines on
-          both sides. All three lines share this same element's edges
-          (left-0/right-0/top-0), so the two top corners meet exactly
-          instead of leaving a gap. */}
+      {/* Left and right borders — a continuous frame open at the top (the
+          video now runs flush to the true page top there, so a top border
+          would cut across it) and the bottom, running the full page height
+          (min-h-screen so it still reaches the bottom on short pages).
+          Inset from the true screen edges (max-w-[1400px] + px, same as the
+          reference) rather than full-bleed — there's visible page
+          background outside the lines on both sides. */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -94,7 +76,6 @@ export default function LandingShell({ children }) {
       >
         <div className="absolute inset-y-0 left-0 w-px bg-[var(--border)] z-20 pointer-events-none" />
         <div className="absolute inset-y-0 right-0 w-px bg-[var(--border)] z-20 pointer-events-none" />
-        <div className="absolute inset-x-0 top-0 h-px bg-[var(--border)] z-20 pointer-events-none" />
 
         {/* Sticky nav — fixed (not absolute) so it stays pinned through
             scroll instead of scrolling away with the frame. top-10/12
