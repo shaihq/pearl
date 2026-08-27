@@ -172,18 +172,18 @@ const CASE_STUDY_FEATURES = [
   {
     title: 'Custom domain & hosting',
     description: 'Connect your own domain and publish your portfolio without worrying about hosting.',
+    image: '/section/custom%20domains.png',
   },
   {
     title: 'AI writing assistant',
     description: 'Write and analyze with AI. Get help explaining your process, decisions, and impact clearly.',
+    image: '/section/write%20using%20ai.png',
   },
   {
     title: 'Notion-like editor',
     description: 'Write and structure your case studies with an editor that feels familiar from the start.',
+    image: '/section/notion%20ediotr.png',
   },
-  // Only the first three have real images (see /public/section) — the rest
-  // still cycle through the same placeholder photos as before until those
-  // are supplied too.
 ].map((feature, i) => ({ ...feature, image: feature.image ?? MOCK_IMAGES[i % MOCK_IMAGES.length] }))
 
 const TESTIMONIALS = [

@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { EASE } from '../../motion'
 import useForceLightTheme from '../../hooks/useForceLightTheme'
@@ -30,28 +30,19 @@ const LIGHT_THEME_VARS = {
 }
 
 export default function LandingShell({ children }) {
-  const [navHidden, setNavHidden] = useState(false)
-  const lastScrollY = useRef(0)
+  const [pastHero, setPastHero] = useState(false)
 
   useForceLightTheme()
 
-  // Hide-on-scroll-down / reveal-on-scroll-up against window scroll — these
-  // pages render outside BuilderShell, so there's no custom canvas
-  // container to hook into like Navbar.jsx does.
+  // Nav stays put now (no hide-on-scroll) — this just watches for having
+  // scrolled roughly a viewport height, our stand-in for "past the hero"
+  // since the shell doesn't have a ref into whatever hero the page renders,
+  // to flip on the "Join for free" button below.
   useEffect(() => {
-    lastScrollY.current = window.scrollY
-
     function handleScroll() {
-      const y = window.scrollY
-      const delta = y - lastScrollY.current
-
-      if (y < 80) setNavHidden(false)
-      else if (delta > 4) setNavHidden(true)
-      else if (delta < -4) setNavHidden(false)
-
-      lastScrollY.current = y
+      setPastHero(window.scrollY > window.innerHeight * 0.8)
     }
-
+    handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -80,17 +71,16 @@ export default function LandingShell({ children }) {
         {/* Sticky nav — fixed (not absolute) so it stays pinned through
             scroll instead of scrolling away with the frame. top-10/12
             matches the outer wrapper's pt-10/12, so it lands in the exact
-            same spot straddling the top border at rest (y=0 scroll). No
-            entrance animation — initial={false} makes framer motion treat
-            the very first render as already at rest, so it's only ever the
-            scroll-driven hide/reveal that animates, never the page load. */}
-        <motion.div
-          className="fixed inset-x-0 top-10 sm:top-12 z-30 px-6 sm:px-8"
-          initial={false}
-          animate={{ y: navHidden ? 'calc(-50% - 120px)' : '-50%' }}
-          transition={{ duration: 0.5, ease: EASE }}
-        >
-          <nav className="flex items-center justify-between max-w-xl mx-auto rounded-full border border-[var(--border)] bg-[var(--secondary)] pl-6 pr-2 py-2 shadow-sm">
+            same spot straddling the top border at rest. -translate-y-1/2 is
+            the same vertical-centering trick the old scroll-driven y
+            animation used, just static now — the nav no longer hides on
+            scroll, it just sits there. */}
+        <div className="fixed inset-x-0 top-10 sm:top-12 -translate-y-1/2 z-30 px-6 sm:px-8">
+          <motion.nav
+            layout
+            transition={{ duration: 0.3, ease: EASE }}
+            className="flex items-center justify-between max-w-xl mx-auto rounded-full border border-[var(--border)] bg-[var(--secondary)] px-6 py-2 shadow-sm"
+          >
             <Link to="/landing" className="flex items-center gap-2">
               <svg width="32" height="32" viewBox="0 0 125 125" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 shrink-0">
                 <g filter="url(#pearl-logo-filter)">
@@ -120,21 +110,44 @@ export default function LandingShell({ children }) {
               <span className="text-lg font-bold tracking-tight lowercase">designfolio</span>
             </Link>
             <div className="flex items-center gap-6 text-sm font-medium text-[var(--primary)]">
-              <a href="#" className="text-[var(--muted)] hover:text-[var(--primary)] transition-colors">
+              {/* layout on each of these makes them FLIP-animate their own
+                  position when the row's total width changes — i.e. when
+                  Join for free mounts/unmounts below, Examples/Blogs/Log in
+                  smoothly slide over to make or close its space instead of
+                  snapping. mode="popLayout" on the AnimatePresence is what
+                  lets that reflow happen immediately on exit rather than
+                  waiting for the exiting element to finish animating out. */}
+              <motion.a layout href="#" className="text-[var(--muted)] hover:text-[var(--primary)] transition-colors">
                 Examples
-              </a>
-              <Link to="/blog" className="text-[var(--muted)] hover:text-[var(--primary)] transition-colors">
-                Blogs
-              </Link>
-              <a
-                href="#"
-                className="rounded-full bg-[var(--background)] px-4 py-2 shadow-sm hover:bg-white transition-colors"
-              >
+              </motion.a>
+              <motion.div layout>
+                <Link to="/blog" className="text-[var(--muted)] hover:text-[var(--primary)] transition-colors">
+                  Blogs
+                </Link>
+              </motion.div>
+              <motion.a layout href="#" className="text-[var(--muted)] hover:text-[var(--primary)] transition-colors">
                 Log in
-              </a>
+              </motion.a>
+              {/* Only shows up once you've scrolled roughly past the hero —
+                  a quick pop/slide in, not there from the first paint. */}
+              <AnimatePresence mode="popLayout">
+                {pastHero && (
+                  <motion.a
+                    layout
+                    href="#"
+                    initial={{ opacity: 0, scale: 0.85, x: -8 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.85, x: -8 }}
+                    transition={{ duration: 0.3, ease: EASE }}
+                    className="rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] px-4 py-2 hover:bg-[var(--primary-hover)] transition-colors whitespace-nowrap"
+                  >
+                    Join for free
+                  </motion.a>
+                )}
+              </AnimatePresence>
             </div>
-          </nav>
-        </motion.div>
+          </motion.nav>
+        </div>
 
         {children}
 
