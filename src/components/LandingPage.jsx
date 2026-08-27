@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import { cubicBezier, motion, useScroll, useTransform } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, cubicBezier, motion, useScroll, useTransform } from 'framer-motion'
 import { EASE } from '../motion'
 import LandingShell from './landing/LandingShell'
 
@@ -12,6 +12,28 @@ const HEADLINE_LINES = [
   ['Stop', 'losing', 'sleep'],
   ['over', 'your', 'UX', 'portfolio.'],
 ]
+
+// Cycled by the subdomain input's animated placeholder below — a real
+// placeholder attribute can't cross-fade between two strings, so this
+// drives a custom overlay instead (hidden once the field has a value).
+const SUBDOMAIN_PLACEHOLDERS = ['yourname', 'type here']
+
+// Per-character stagger for the placeholder's flip — staggerChildren on the
+// word wrapper fires each letter's flip a beat after the last, so the whole
+// word rolls through like a wave instead of flipping as one rigid block.
+// staggerDirection: -1 on exit makes the outgoing word wave off in reverse
+// (last letter first), which reads more like a continuous ripple than the
+// entrance wave simply running backwards.
+const placeholderWaveContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.025 } },
+  exit: { transition: { staggerChildren: 0.02, staggerDirection: -1 } },
+}
+const placeholderWaveChar = {
+  hidden: { rotateX: 100, y: 5, opacity: 0 },
+  visible: { rotateX: 0, y: 0, opacity: 0.7, transition: { duration: 0.4, ease: [0.65, 0, 0.35, 1] } },
+  exit: { rotateX: -100, y: -5, opacity: 0, transition: { duration: 0.35, ease: [0.65, 0, 0.35, 1] } },
+}
 
 // Real company logos (pre-styled PNGs with their own background baked in,
 // so no bg-color class needed here) scattered around the stat block,
@@ -133,42 +155,36 @@ const MOCK_IMAGES = [
 
 const CASE_STUDY_FEATURES = [
   {
+    title: 'Templates made for great portfolios',
+    description: 'Choose a proven structure and customize every section to make it your own.',
+    image: '/section/templates.png',
+  },
+  {
+    title: 'Password protection',
+    description: 'Keep your work private and share case studies only with the people you choose.',
+    image: '/section/protectpassword.png',
+  },
+  {
+    title: 'Figma embeds',
+    description: 'Embed your Figma files directly into your case studies. Keep your work interactive and easy to explore.',
+    image: '/section/embeds%20figma.png',
+  },
+  {
+    title: 'Custom domain & hosting',
+    description: 'Connect your own domain and publish your portfolio without worrying about hosting.',
+  },
+  {
     title: 'AI writing assistant',
-    description: 'Get guided prompts that help you explain your process clearly.',
+    description: 'Write and analyze with AI. Get help explaining your process, decisions, and impact clearly.',
   },
   {
-    title: 'Case study templates',
-    description: 'Start from templates built from portfolios that got people hired.',
+    title: 'Notion-like editor',
+    description: 'Write and structure your case studies with an editor that feels familiar from the start.',
   },
-  {
-    title: 'Private sharing',
-    description: 'Password-protect a case study before it goes public.',
-  },
-  {
-    title: 'Visual process timeline',
-    description: 'Show your design process step by step, exactly how it happened.',
-  },
-  {
-    title: 'Custom sections',
-    description: 'Add exactly the sections your story needs, drag and drop.',
-  },
-  {
-    title: 'Metrics & outcomes',
-    description: 'Highlight the impact of your work with built-in stat blocks.',
-  },
-  {
-    title: 'Real-time feedback',
-    description: 'Collect comments from mentors and peers before you publish.',
-  },
-  {
-    title: 'One-click export',
-    description: 'Turn any case study into a polished PDF in seconds.',
-  },
-  {
-    title: 'Built-in SEO',
-    description: 'Get discovered by recruiters searching for your skills.',
-  },
-].map((feature, i) => ({ ...feature, image: MOCK_IMAGES[i % MOCK_IMAGES.length] }))
+  // Only the first three have real images (see /public/section) — the rest
+  // still cycle through the same placeholder photos as before until those
+  // are supplied too.
+].map((feature, i) => ({ ...feature, image: feature.image ?? MOCK_IMAGES[i % MOCK_IMAGES.length] }))
 
 const TESTIMONIALS = [
   {
@@ -314,6 +330,15 @@ function TestimonialCard({ index, total, scrollYProgress, testimonial, layout })
 export default function LandingPage() {
   const [videoLoaded, setVideoLoaded] = useState(false)
   const [subdomain, setSubdomain] = useState('')
+
+  const [placeholderIndex, setPlaceholderIndex] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPlaceholderIndex((i) => (i + 1) % SUBDOMAIN_PLACEHOLDERS.length)
+    }, 2400)
+    return () => clearInterval(id)
+  }, [])
+
   const iconLayerRef = useRef(null)
 
   // Scroll-linked drift on the icon layer — tracks this section's own
@@ -426,22 +451,77 @@ export default function LandingPage() {
                     it's the least essential part of the row, and dropping it
                     keeps "Get started" from getting cramped rather than
                     needing to shrink the button down to an icon. */}
-                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] pl-5 sm:pl-6 pr-1 py-1 shadow-sm transition-shadow duration-200 ease-out focus-within:shadow-[0_0_0_4px_rgba(10,10,10,0.06)]">
-                  <input
-                    type="text"
-                    value={subdomain}
-                    onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    placeholder="john"
-                    className="w-16 sm:w-32 bg-transparent py-2 sm:py-2.5 text-sm sm:text-base text-[var(--primary)] placeholder:text-[var(--muted)] outline-none selection:bg-[var(--primary)] selection:text-[var(--primary-foreground)]"
-                  />
+                <div
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] pl-5 sm:pl-6 pr-1 py-1 shadow-sm transition-shadow duration-200 ease-out focus-within:shadow-[0_0_0_4px_rgba(10,10,10,0.06)]"
+                  style={{ perspective: 500 }}
+                >
+                  <div className="relative w-16 sm:w-32" style={{ perspective: 400 }}>
+                    <input
+                      type="text"
+                      value={subdomain}
+                      onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9- ]/g, ''))}
+                      aria-label="Choose your subdomain"
+                      className="w-full bg-transparent py-2 sm:py-2.5 text-sm sm:text-base text-[var(--primary)] outline-none selection:bg-[var(--primary)] selection:text-[var(--primary-foreground)]"
+                    />
+                    {/* Real <input placeholder> can't cross-fade between two
+                        strings — this overlay swaps in for it instead,
+                        hidden the instant there's a real value. Split into
+                        one motion.span per character (not one span for the
+                        whole word) so staggerChildren can fire each letter's
+                        flip a beat after the last — the word rolls through
+                        like a wave instead of flipping as one rigid block.
+                        opacity-70 (not the full-strength --primary look
+                        opacity:1 gave it) is what actually reads as a muted
+                        placeholder instead of just faded body text.
+                        pointer-events-none so clicks/focus still land on the
+                        input underneath. */}
+                    {!subdomain && (
+                      <div className="absolute inset-0 flex items-center overflow-hidden pointer-events-none">
+                        <AnimatePresence mode="popLayout">
+                          <motion.span
+                            key={SUBDOMAIN_PLACEHOLDERS[placeholderIndex]}
+                            variants={placeholderWaveContainer}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="inline-flex text-sm sm:text-base text-[var(--muted)]"
+                          >
+                            {SUBDOMAIN_PLACEHOLDERS[placeholderIndex].split('').map((ch, i) => (
+                              <motion.span
+                                key={i}
+                                variants={placeholderWaveChar}
+                                style={{ display: 'inline-block', transformOrigin: 'center bottom', whiteSpace: 'pre' }}
+                              >
+                                {ch}
+                              </motion.span>
+                            ))}
+                          </motion.span>
+                        </AnimatePresence>
+                      </div>
+                    )}
+                  </div>
                   <span className="hidden sm:block h-5 w-px bg-[var(--border)]" />
                   <span className="hidden sm:inline pr-3 text-base text-[var(--muted)]">.designfolio.me</span>
-                  <button className="rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] text-sm sm:text-base font-medium px-5 sm:px-6 py-2.5 sm:py-3 transition-all duration-150 ease-out hover:bg-[var(--primary-hover)] active:scale-[0.97] active:bg-[var(--primary-hover)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_rgba(10,10,10,0.35)] whitespace-nowrap">
+                  {/* Very subtle 3D tilt, not a big showy one — a couple
+                      degrees of rotateX/rotateY on hover (needs the parent
+                      pill's perspective above to read as depth rather than
+                      a skew) and back to flat with a slight press on tap.
+                      Color/bg still animate via the plain Tailwind
+                      transition below; framer only owns the transform now,
+                      replacing the old active:scale for that. */}
+                  <motion.button
+                    whileHover={{ rotateX: -5, rotateY: 3, y: -1 }}
+                    whileTap={{ scale: 0.96, rotateX: 0, rotateY: 0, y: 0 }}
+                    transition={{ duration: 0.25, ease: EASE }}
+                    style={{ transformStyle: 'preserve-3d' }}
+                    className="rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] text-sm sm:text-base font-medium px-5 sm:px-6 py-2.5 sm:py-3 transition-colors duration-150 ease-out hover:bg-[var(--primary-hover)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_rgba(10,10,10,0.35)] whitespace-nowrap"
+                  >
                     Get started
-                  </button>
+                  </motion.button>
                 </div>
                 <p className="text-xs text-[var(--muted)]">Claim your domain before it's taken</p>
               </motion.div>
+
             </div>
 
             {/* -mx-6/-mx-8 cancels the padding this wrapper just re-added
