@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, cubicBezier, motion, useScroll, useTransform } from 'framer-motion'
+import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion'
 import { EASE } from '../motion'
 import LandingShell from './landing/LandingShell'
-
-// EASE is a raw cubic-bezier control-point array — fine for
-// transition:{ease}, but useTransform's own `ease` option wants an actual
-// easing *function* (t) => t, a different API. cubicBezier(...) converts it.
-const SCROLL_EASE = cubicBezier(...EASE)
 
 const HEADLINE_LINES = [
   ['Stop', 'losing', 'sleep'],
@@ -186,145 +181,75 @@ const CASE_STUDY_FEATURES = [
   },
 ].map((feature, i) => ({ ...feature, image: feature.image ?? MOCK_IMAGES[i % MOCK_IMAGES.length] }))
 
+// Masonry "wall of quotes" testimonials — avatarBg stands in for a real
+// profile photo (none on hand), rendered as an initials circle instead.
 const TESTIMONIALS = [
   {
     quote: 'What used to take me weeks to put together, I built in a single weekend.',
     name: 'Marcus Reyes',
-    role: 'Founder, Reyes Studio',
-    bg: '#e8c9a0',
+    role: 'Reyes Studio',
+    avatarBg: '#e8c9a0',
   },
   {
-    quote: 'Design portfolios used to take me forever — Pearl cut that time in half.',
+    quote:
+      'Design portfolios used to take me forever — Pearl cut that time in half. The templates alone are worth it.',
     name: 'Dana Cole',
-    role: 'Design Director @ Fielo',
-    bg: '#a9d6b8',
+    role: 'Fielo',
+    avatarBg: '#a9d6b8',
   },
   {
     quote: 'I had three interview requests within a week of publishing my portfolio.',
     name: 'Priya Asha',
-    role: 'Product Designer @ Northwind',
-    bg: '#e3d485',
+    role: 'Northwind',
+    avatarBg: '#e3d485',
   },
   {
-    quote: "They didn't just help me build a portfolio, they helped me tell my story.",
+    quote:
+      "They didn't just help me build a portfolio, they helped me tell my story. Every case study finally reads the way the work actually happened.",
     name: 'Tom Harris',
-    role: 'Product Designer @ Stacklane',
-    bg: '#f4f1ea',
+    role: 'Stacklane',
+    avatarBg: '#cbb8e8',
   },
   {
     quote: "Best decision I've made for my career in the last three years.",
     name: 'Lena Vogel',
-    role: 'UX Lead @ Kindred',
-    bg: '#d9744e',
+    role: 'Kindred',
+    avatarBg: '#d9744e',
   },
   {
     quote: 'Honest, fast, and the results speak for themselves.',
     name: 'Chris Owens',
-    role: 'Founder @ Dusklab',
-    bg: '#c3d9ef',
+    role: 'Dusklab',
+    avatarBg: '#c3d9ef',
+  },
+  {
+    quote:
+      "Pearl is one of those tabs I never close. It's the fastest way I've found to turn messy Figma files into something a recruiter actually wants to read.",
+    name: 'Noah Kim',
+    role: 'Fielo',
+    avatarBg: '#f3b6a4',
+  },
+  {
+    quote: 'The password protection alone saved me from sharing unfinished work with the wrong people twice.',
+    name: 'Aria Bloom',
+    role: 'Northwind',
+    avatarBg: '#9fd0d6',
+  },
+  {
+    quote: "Went from a Notion doc nobody read to a portfolio that's gotten me every interview since.",
+    name: 'Diego Marín',
+    role: 'Dusklab',
+    avatarBg: '#e0c68a',
   },
 ]
 
-// Fixed per-card resting offset/rotation — deterministic (not randomized on
-// every render) but varied enough per card to read as an organic pile
-// rather than a perfectly centered, mechanical stack.
-const CARD_LAYOUT = [
-  { x: -36, y: -8, rotate: -7 },
-  { x: 30, y: 10, rotate: 5 },
-  { x: -18, y: 16, rotate: -4 },
-  { x: 22, y: -14, rotate: 6 },
-  { x: -26, y: 2, rotate: -5 },
-  { x: 14, y: -4, rotate: 3 },
-]
-
-function lerp(a, b, t) {
-  return a + (b - a) * t
-}
-function clamp01(t) {
-  return Math.min(1, Math.max(0, t))
-}
-
-// Per-card [start, end] window in scrollYProgress. Each card gets an equal
-// 1/total slot and only starts once the previous card's slot has fully
-// scrolled past — index 0 still arrives early on its own, via the 'start
-// center' offset on scrollYProgress above, the same way.
-function cardWindow(index, total) {
-  return [index / total, (index + 0.65) / total]
-}
-
-// Scroll pin height per card, in vh — also drives the snap-marker math
-// below, so it's one shared constant rather than a magic 40 in two places.
-const CARD_SLOT_VH = 40
-
-// Vertical offset (vh, relative to the tall wrapper below) at which card
-// `index`'s arrival finishes. Solves the same 'start center' -> 'end end'
-// scroll mapping useScroll uses for scrollYProgress above, but for the
-// wrapper's own position instead of progress, so a snap-aligned marker
-// placed here lands the page exactly where that card has finished
-// settling — not an approximation of it.
-function cardSnapTopVh(index, total) {
-  const [, end] = cardWindow(index, total)
-  return end * (CARD_SLOT_VH * total - 50) - 50
-}
-
-// Purely scroll-progress-driven (no whileInView, no scroll-jacking) — the
-// card's position is a direct function of scrollYProgress, so scrolling up
-// naturally unwinds it instead of needing separate "reverse" logic, and
-// nothing ever fights the user's own scroll (no preventDefault/scrollTo,
-// just a sticky parent + derived transforms).
-//
-// Uses the FUNCTION overload of useTransform (raw scroll value in, plain JS
-// math out) rather than the [inputRange],[outputRange] overload. The
-// latter — verified empirically, on this framer-motion version — has a
-// real bug for plain (non-function-eased) ranges: on this page, an
-// unclamped output would climb toward its target then silently collapse
-// back toward 0 once scroll continued past the card's own window, instead
-// of holding. Doing the interpolation by hand here sidesteps that path
-// entirely rather than relying on framer-motion's internal clamping.
-function TestimonialCard({ index, total, scrollYProgress, testimonial, layout }) {
-  const [start, end] = cardWindow(index, total)
-
-  // Arrives from below its own resting spot (140px lower) and settles
-  // there — the resting offset is baked into both ends of the range so it
-  // lands at its scattered position, not at a literal y:0.
-  const y = useTransform(scrollYProgress, (raw) => {
-    const t = SCROLL_EASE(clamp01((raw - start) / (end - start)))
-    return lerp(140 + layout.y, layout.y, t)
-  })
-  // Finishes fading in over just the first 40% of the arrival window, well
-  // ahead of the slide/scale/rotate settling over the full window — matching
-  // its pace to the rest of the motion (or worse, a separate longer span)
-  // read as a slow fade dragging behind everything else.
-  const opacity = useTransform(scrollYProgress, (raw) => clamp01((raw - start) / ((end - start) * 0.4)))
-  const scale = useTransform(scrollYProgress, (raw) => {
-    const t = SCROLL_EASE(clamp01((raw - start) / (end - start)))
-    return lerp(0.92, 1, t)
-  })
-  const rotate = useTransform(scrollYProgress, (raw) => {
-    const t = SCROLL_EASE(clamp01((raw - start) / (end - start)))
-    return lerp(layout.rotate * 2.4, layout.rotate, t)
-  })
-
-  return (
-    <motion.div
-      style={{
-        y,
-        opacity,
-        scale,
-        rotate,
-        x: layout.x,
-        background: testimonial.bg,
-        zIndex: index,
-      }}
-      className="absolute inset-0 flex flex-col justify-between rounded-3xl p-6 sm:p-8 shadow-2xl ring-1 ring-black/5"
-    >
-      <p className="text-lg sm:text-xl font-[550] leading-snug text-[#1a1a1a]">“{testimonial.quote}”</p>
-      <div>
-        <p className="font-[550] text-sm text-[#1a1a1a]">{testimonial.name}</p>
-        <p className="text-xs text-[#1a1a1a]/60">{testimonial.role}</p>
-      </div>
-    </motion.div>
-  )
+function initials(name) {
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
 }
 
 export default function LandingPage() {
@@ -351,16 +276,6 @@ export default function LandingPage() {
     offset: ['start end', 'end start'],
   })
   const iconParallaxY = useTransform(iconScrollProgress, [0, 1], [70, -70])
-
-  const testimonialStackRef = useRef(null)
-  // 'start center' -> 'end end': progress starts once the wrapper is half
-  // scrolled into view (not tied to the whole page's scroll position),
-  // so the first card is already arriving by the time the sticky child
-  // below locks to the top instead of only starting then.
-  const { scrollYProgress: testimonialProgress } = useScroll({
-    target: testimonialStackRef,
-    offset: ['start center', 'end end'],
-  })
 
   return (
     <LandingShell>
@@ -650,60 +565,44 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          {/* Same self-stretch -mx-6/-mx-8 breakout as the dark section and
-              tabs/preview above — stays inside the bordered frame (not a
-              page-level sibling anymore) so the frame's left/right/top
-              lines keep running alongside it instead of stopping short.
-              The tall wrapper just gives scrollYProgress 0-1 to work with
-              while position:sticky pins the viewport; scrolling itself is
-              completely native the whole time — no scroll-jacking, no
-              preventDefault, nothing fighting the user's own scroll.
-              70vh/card felt sluggish to get to the first card — 40vh/card
-              gets the stack moving right away instead of a long dead
-              scroll after the previous section. */}
-          <div
-            ref={testimonialStackRef}
-            className="relative self-stretch -mx-6 sm:-mx-8"
-            style={{ height: `${TESTIMONIALS.length * CARD_SLOT_VH}vh` }}
+          {/* Static masonry "wall of quotes" — CSS columns (break-inside-avoid
+              per card) rather than the old scroll-pinned stack, matching the
+              reference: a plain grid of bordered cards at uneven heights, no
+              scroll-jacking or motion tied to it at all. Same self-stretch
+              -mx-6/-mx-8 + px-6/8 py-* breakout pattern as the sections
+              above, just without the dark theme override — this one stays
+              on the page's normal light background. */}
+          <motion.div
+            variants={heroReveal}
+            className="relative self-stretch -mx-6 sm:-mx-8 px-6 sm:px-8 py-20 sm:py-28"
           >
-            {/* One snap-align target per card, positioned (via
-                cardSnapTopVh) at the exact scroll offset where that card
-                finishes arriving — combined with `scroll-snap-type: y
-                proximity` on html (index.css), scrolling still behaves
-                natively, it just settles cleanly on a fully-arrived card
-                instead of stopping mid-transition. Zero-height and
-                pointer-events-none so they're otherwise invisible. */}
-            {TESTIMONIALS.map((testimonial, i) => (
-              <div
-                key={`snap-${testimonial.name}`}
-                aria-hidden="true"
-                className="absolute inset-x-0 snap-start pointer-events-none"
-                style={{ top: `${cardSnapTopVh(i, TESTIMONIALS.length)}vh` }}
-              />
-            ))}
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-[650] tracking-tight text-[var(--heading)]">
+              What our users are saying.
+            </h2>
 
-            <div
-              className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden bg-[var(--background)]"
-              style={{
-                backgroundImage:
-                  'linear-gradient(to right, var(--border) 1px, transparent 1px), linear-gradient(to bottom, var(--border) 1px, transparent 1px)',
-                backgroundSize: '40px 40px',
-              }}
-            >
-              <div className="relative w-[280px] h-[320px] sm:w-[380px] sm:h-[420px]">
-                {TESTIMONIALS.map((testimonial, i) => (
-                  <TestimonialCard
-                    key={testimonial.name}
-                    index={i}
-                    total={TESTIMONIALS.length}
-                    scrollYProgress={testimonialProgress}
-                    testimonial={testimonial}
-                    layout={CARD_LAYOUT[i]}
-                  />
-                ))}
-              </div>
+            <div className="mt-12 sm:mt-16 columns-1 sm:columns-2 lg:columns-4 gap-6 max-w-6xl mx-auto text-left">
+              {TESTIMONIALS.map((testimonial) => (
+                <div
+                  key={testimonial.name}
+                  className="mb-6 break-inside-avoid rounded-2xl border border-[var(--border)] p-6"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-[650] text-[#1a1a1a]/70 shrink-0"
+                      style={{ background: testimonial.avatarBg }}
+                    >
+                      {initials(testimonial.name)}
+                    </div>
+                    <div>
+                      <p className="font-[650] text-sm text-[var(--primary)]">{testimonial.name}</p>
+                      <p className="text-xs text-[var(--muted)]">{testimonial.role}</p>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm leading-relaxed text-[var(--primary)]/80">{testimonial.quote}</p>
+                </div>
+              ))}
             </div>
-          </div>
+          </motion.div>
         </motion.section>
     </LandingShell>
   )

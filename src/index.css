@@ -243,11 +243,6 @@
    scroll; body doesn't need its own copy of the rule. */
 html {
   overflow-x: hidden;
-  /* proximity (not mandatory) so this only pulls toward a snap target when
-     one is already close — LandingPage's testimonial cards are the only
-     thing on the site marking scroll-snap-align, so elsewhere this is a
-     no-op. */
-  scroll-snap-type: y proximity;
 }
 
 body {
