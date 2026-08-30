@@ -552,7 +552,12 @@ export default function LandingPage() {
               Everything you need to write your UX case study
             </h2>
 
-            <div className="relative z-10 mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-5xl mx-auto text-left">
+            {/* max-w-6xl (not the old max-w-5xl) — at 5xl the grid sat
+                noticeably narrower than the dark section's own full-bleed
+                background, reading as extra side padding around the cards
+                rather than the section actually using its available
+                width. */}
+            <div className="relative z-10 mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-6xl mx-auto text-left">
               {CASE_STUDY_FEATURES.map((feature) => (
                 <div key={feature.title}>
                   <div className="aspect-square rounded-2xl border border-[var(--border)] overflow-hidden">

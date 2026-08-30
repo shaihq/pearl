@@ -34,23 +34,6 @@ const LIGHT_THEME_VARS = {
   '--heading': '#2b2b2b', // softer than --primary — headings shouldn't read as pure black
 }
 
-// Same dark palette LandingPage's own DARK_THEME_VARS uses for its one
-// section that breaks from the page's forced-light theme — copied here
-// rather than imported, matching how LIGHT_THEME_VARS above is already a
-// standalone copy of :root rather than a shared import.
-const DARK_THEME_VARS = {
-  '--background': '#09090b',
-  '--card': '#18181b',
-  '--secondary': '#27272a',
-  '--secondary-hover': '#3f3f46',
-  '--muted': '#a1a1aa',
-  '--border': '#27272a',
-  '--primary': '#ffffff',
-  '--primary-foreground': '#0a0a0a',
-  '--primary-hover': '#e5e5e5',
-  '--heading': '#f2f2f2',
-}
-
 // Icon + name row for the footer's auto-scrolling logo marquee — same
 // square badge PNGs LandingPage's ICON_BURST/trusted-by strip use.
 const FOOTER_LOGOS = [
@@ -92,14 +75,17 @@ export default function LandingShell({ children }) {
           video now runs flush to the true page top there, so a top border
           would cut across it) and the bottom, running the full page height
           (min-h-screen so it still reaches the bottom on short pages).
-          Inset from the true screen edges (max-w-[1400px] + px, same as the
+          Inset from the true screen edges (max-w-[1300px] + px, same as the
           reference) rather than full-bleed — there's visible page
-          background outside the lines on both sides. */}
+          background outside the lines on both sides. This is the one shared
+          frame every LandingShell page (landing, blog, privacy policy) sits
+          inside, so the width lives here once rather than being set
+          per-page. */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: EASE }}
-        className="relative min-h-screen max-w-[1400px] mx-auto px-6 sm:px-8"
+        className="relative min-h-screen max-w-[1300px] mx-auto px-6 sm:px-8"
       >
         <div className="absolute inset-y-0 left-0 w-px bg-[var(--border)] z-20 pointer-events-none" />
         <div className="absolute inset-y-0 right-0 w-px bg-[var(--border)] z-20 pointer-events-none" />
@@ -118,11 +104,14 @@ export default function LandingShell({ children }) {
               once the mobile drawer below adds height to this same element.
               p-2 uniform padding — left/right now matches top/bottom
               exactly instead of the pill reading noticeably wider than it
-              is tall. */}
+              is tall. Frosted-glass pill — translucent light-gray fill over
+              a heavy backdrop-blur, so whatever's scrolling underneath
+              (hero video, dotted backdrop, page content) shows through
+              softened instead of the nav sitting on a flat opaque chip. */}
           <motion.nav
             layout
             transition={{ duration: 0.3, ease: EASE }}
-            className={`max-w-xl mx-auto rounded-[28px] border border-[var(--border)] bg-[var(--secondary)] p-2 shadow-sm overflow-hidden ${
+            className={`max-w-xl mx-auto rounded-[28px] border border-[var(--border)] bg-[rgba(255,255,255,0.92)] backdrop-blur-[48px] p-2 shadow-sm overflow-hidden ${
               // Join for free's own button padding normally gives the pill's
               // right edge some visual buffer — without it, plain "Log in"
               // text sits right up against the curve at only p-2. sm: only,
@@ -281,70 +270,53 @@ export default function LandingShell({ children }) {
 
         {/* Closes out the frame, which is deliberately open at the bottom
             (see the border comment above) — so this is every page's actual
-            terminus, not just another section. Divider matches the hatched
-            ones used within page content, closing the section instead of
-            just trailing into blank white space. Full-bleed illustrated CTA
-            band with a plain legal bar underneath, kept as a separate
-            flat-color strip rather than laid over the artwork, so the
-            copyright/links stay legible regardless of what's happening in
-            the image behind the CTA above it.
-
-            Animated on its own trigger (not a shared stagger container with
-            whatever page content precedes it) so this footer behaves
-            identically no matter which page is rendering it. */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.55, ease: EASE }}
-          className="-mx-6 sm:-mx-8 h-16 border-y border-[var(--border)]"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent 12px)',
-          }}
-        />
-
-        {/* Dark themed like LandingPage's own DARK_THEME_VARS section — no
-            more photo background, just the flat dark --background. The
-            override goes on this whole wrapper (not just the CTA div below)
-            so the legal bar underneath inherits the same dark tokens too,
-            instead of a dark CTA sitting directly on a light bar. */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.55, ease: EASE }}
-          style={DARK_THEME_VARS}
-          className="-mx-6 sm:-mx-8 bg-[var(--background)]"
-        >
-          <div className="relative flex flex-col items-center text-center px-6 sm:px-8 py-24 sm:py-32">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-[650] tracking-tight leading-[1.1] max-w-2xl text-[var(--heading)]">
-              Join 34,600+ designers at top companies
-            </h2>
-            <p className="mt-4 text-lg sm:text-xl text-[var(--muted)] max-w-md">
-              Build a portfolio recruiters actually remember — publish today and start applying with confidence.
-            </p>
-            <button className="mt-8 inline-flex items-center gap-1.5 rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] text-sm font-medium pl-6 pr-5 py-3 hover:bg-[var(--primary-hover)] transition-colors">
-              Claim your domain — FREE
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            terminus, not just another section. Styled after a reference: a
+            colorful gradient band with a rounded-top light card pulled up
+            over it (negative margin), rather than the previous flat dark
+            CTA block — content itself (heading, CTA, trusted-by marquee,
+            legal links) is unchanged, just rearranged into this shape. No
+            entrance animation or parallax on this section — static, same
+            as every load. */}
+        <div className="relative -mx-6 sm:-mx-8">
+          {/* Its own padding (top + sides, none on the bottom) is what
+              leaves a visible strip of the photo showing on top of AND
+              beside the white card below, rather than the card running
+              flush to its edges. Card only rounds its top corners since the
+              bottom is flush with this wrapper's own bottom (nothing
+              peeking through there) — matches the frame's own "open at the
+              bottom" convention elsewhere on the page. */}
+          <div className="relative overflow-hidden px-4 sm:px-8 pt-10 sm:pt-16">
+            <img src="/section/footer-bg.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="relative rounded-t-[14px] sm:rounded-t-[20px] bg-[var(--background)] px-6 sm:px-8 pt-14 sm:pt-20 pb-8">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8">
+              <div>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-[650] tracking-tight leading-[1.1] max-w-xl text-[var(--heading)]">
+                  Join 34,600+ designers at top companies
+                </h2>
+                <p className="mt-4 text-base sm:text-lg text-[var(--muted)] max-w-md">
+                  Build a portfolio recruiters actually remember — publish today and start applying with confidence.
+                </p>
+              </div>
+              <button className="shrink-0 self-start inline-flex items-center gap-1.5 rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] text-sm font-medium pl-6 pr-5 py-3 hover:bg-[var(--primary-hover)] transition-colors">
+                Claim your domain — FREE
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
             {/* Auto-scrolling logo marquee — the row is duplicated back to
                 back and animated from x:0% to x:-50%, so the loop point is
                 invisible (the second copy is pixel-identical to the first).
                 Full-bleed (-mx-6/-mx-8 again, cancelling this div's own
                 px-6/8) so it isn't boxed into the centered text column
-                above it. w-full matters here: the parent is a flex column
-                with items-center, so without it this div shrinks to fit its
-                own (huge, doubled-up) content instead of the section's
-                actual width. mask-image fades the row out right at the
-                edges instead of overflow-hidden hard-cropping mid-logo —
-                that hard crop was the "getting cut" look. */}
+                above it. mask-image fades the row out right at the edges
+                instead of overflow-hidden hard-cropping mid-logo — a wider
+                fade zone (25%/75%, was 8%/92%) reads as a lighter, more
+                gradual fade instead of a near-instant snap to full opacity. */}
             <div
-              className="relative mt-16 w-full -mx-6 sm:-mx-8 overflow-hidden"
+              className="relative mt-16 sm:mt-24 w-full -mx-6 sm:-mx-8 overflow-hidden"
               style={{
-                maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
-                WebkitMaskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
+                maskImage: 'linear-gradient(to right, transparent, black 25%, black 75%, transparent)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent, black 25%, black 75%, transparent)',
               }}
             >
               <motion.div
@@ -360,23 +332,24 @@ export default function LandingShell({ children }) {
                 ))}
               </motion.div>
             </div>
-          </div>
 
-          <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 px-6 sm:px-8 py-6 border-t border-[var(--border)] bg-[var(--background)] text-xs text-[var(--muted)]">
-            <p>© 2026 Designfolio. All rights reserved.</p>
-            <nav className="flex items-center gap-6">
-              <Link to="/privacy-policy" className="hover:text-[var(--primary)] transition-colors">
-                Privacy Policy
-              </Link>
-              <a href="#" className="hover:text-[var(--primary)] transition-colors">
-                Terms of Service
-              </a>
-              <a href="#" className="hover:text-[var(--primary)] transition-colors">
-                Cookie Settings
-              </a>
-            </nav>
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 mt-12 pt-6 border-t border-[var(--border)] text-xs text-[var(--muted)]">
+              <p>© 2026 Designfolio. All rights reserved.</p>
+              <nav className="flex items-center gap-6">
+                <Link to="/privacy-policy" className="hover:text-[var(--primary)] transition-colors">
+                  Privacy Policy
+                </Link>
+                <a href="#" className="hover:text-[var(--primary)] transition-colors">
+                  Terms of Service
+                </a>
+                <a href="#" className="hover:text-[var(--primary)] transition-colors">
+                  Cookie Settings
+                </a>
+              </nav>
+            </div>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   )
