@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   AnimatePresence,
   motion,
+  useAnimationControls,
   useMotionValue,
   useReducedMotion,
   useScroll,
@@ -304,6 +305,31 @@ function getNoiseBuffer(ctx) {
   return buffer
 }
 
+// A shared noise burst: buffer source -> biquad filter -> fast
+// attack/decay gain envelope -> destination. Both playKeystroke and
+// playClaimClick below are built out of a few of these, tuned differently.
+function noiseBurst(ctx, noiseBuf, destination, t, type, freq, q, peak, attack, decay, startAt = 0) {
+  const src = ctx.createBufferSource()
+  src.buffer = noiseBuf
+  const filter = ctx.createBiquadFilter()
+  filter.type = type
+  filter.frequency.value = freq
+  filter.Q.value = q
+  const gain = ctx.createGain()
+  const s = t + startAt
+  gain.gain.setValueAtTime(0.0001, s)
+  gain.gain.exponentialRampToValueAtTime(peak, s + attack)
+  gain.gain.exponentialRampToValueAtTime(0.0001, s + attack + decay)
+  src.connect(filter).connect(gain).connect(destination)
+  src.start(s)
+  src.stop(s + attack + decay + 0.02)
+}
+
+function prefersReducedMotionNow() {
+  if (typeof window === 'undefined' || !window.matchMedia) return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 function playKeystroke({ backspace = false } = {}) {
   const ctx = getKeystrokeCtx()
   if (!ctx) return
@@ -322,33 +348,15 @@ function playKeystroke({ backspace = false } = {}) {
   tame.Q.value = 0.3
   master.connect(tame).connect(ctx.destination)
 
-  // One noise burst through a filter with a fast attack/decay envelope.
-  const burst = (type, freq, q, peak, attack, decay, startAt = 0) => {
-    const src = ctx.createBufferSource()
-    src.buffer = noiseBuf
-    const filter = ctx.createBiquadFilter()
-    filter.type = type
-    filter.frequency.value = freq
-    filter.Q.value = q
-    const gain = ctx.createGain()
-    const s = t + startAt
-    gain.gain.setValueAtTime(0.0001, s)
-    gain.gain.exponentialRampToValueAtTime(peak, s + attack)
-    gain.gain.exponentialRampToValueAtTime(0.0001, s + attack + decay)
-    src.connect(filter).connect(gain).connect(master)
-    src.start(s)
-    src.stop(s + attack + decay + 0.02)
-  }
-
   // 1) Bottom-out "clack" — low-mid noise resonance (plate + keycap).
-  burst('bandpass', backspace ? rand(200, 250) : rand(300, 380), rand(2, 2.8), rand(1.6, 2.4), 0.002, rand(0.035, 0.06))
+  noiseBurst(ctx, noiseBuf, master, t, 'bandpass', backspace ? rand(200, 250) : rand(300, 380), rand(2, 2.8), rand(1.6, 2.4), 0.002, rand(0.035, 0.06))
   // 2) "Click" transient — the mechanical snap, softened a hair so it reads
   //    smudged rather than sharp.
-  burst('highpass', rand(2100, 2800), 0.7, rand(0.085, 0.14), 0.0022, rand(0.009, 0.017))
+  noiseBurst(ctx, noiseBuf, master, t, 'highpass', rand(2100, 2800), 0.7, rand(0.085, 0.14), 0.0022, rand(0.009, 0.017))
   // 3) Release tick — smaller, brighter, a beat later. The press/release
   //    double-tick is what actually reads as a mechanical board.
   if (!backspace) {
-    burst('highpass', rand(2900, 3700), 0.7, rand(0.03, 0.06), 0.002, rand(0.011, 0.021), rand(0.045, 0.075))
+    noiseBurst(ctx, noiseBuf, master, t, 'highpass', rand(2900, 3700), 0.7, rand(0.03, 0.06), 0.002, rand(0.011, 0.021), rand(0.045, 0.075))
   }
 
   // 4) A little low-end weight — quiet, short.
@@ -363,6 +371,62 @@ function playKeystroke({ backspace = false } = {}) {
   thump.connect(thumpGain).connect(master)
   thump.start(t)
   thump.stop(t + 0.09)
+}
+
+// The "Claim now" confirm click — one deliberate press on a big glossy
+// pill, not a fast run of small key taps, so it's tuned rounder and a
+// touch more present than a single keystroke: a higher, wider body
+// resonance, a crisper confirm edge, and a small rising pitch "lift" right
+// after the hit (the bit of "confirmed" character a plain tap doesn't
+// have). Skipped under prefers-reduced-motion, same sensory-reduction call
+// as the keystroke sound.
+function playClaimClick() {
+  if (prefersReducedMotionNow()) return
+  const ctx = getKeystrokeCtx()
+  if (!ctx) return
+  const t = ctx.currentTime
+  const rand = (a, b) => a + Math.random() * (b - a)
+  const noiseBuf = getNoiseBuffer(ctx)
+
+  const master = ctx.createGain()
+  master.gain.value = 0.6
+  const tame = ctx.createBiquadFilter()
+  tame.type = 'lowpass'
+  tame.frequency.value = rand(6500, 7500)
+  tame.Q.value = 0.3
+  master.connect(tame).connect(ctx.destination)
+
+  // Body — rounder and a hair higher than the keystroke's, plus a crisp
+  // confirm edge.
+  noiseBurst(ctx, noiseBuf, master, t, 'bandpass', rand(480, 560), rand(2, 2.6), rand(1.8, 2.4), 0.002, rand(0.055, 0.075))
+  noiseBurst(ctx, noiseBuf, master, t, 'highpass', rand(3200, 4000), 0.7, rand(0.1, 0.16), 0.0018, rand(0.009, 0.016))
+
+  // Weight.
+  const thump = ctx.createOscillator()
+  thump.type = 'sine'
+  thump.frequency.setValueAtTime(rand(140, 165), t)
+  thump.frequency.exponentialRampToValueAtTime(rand(90, 105), t + 0.045)
+  const thumpGain = ctx.createGain()
+  thumpGain.gain.setValueAtTime(0, t)
+  thumpGain.gain.linearRampToValueAtTime(rand(0.07, 0.11), t + 0.005)
+  thumpGain.gain.exponentialRampToValueAtTime(0.0005, t + rand(0.045, 0.065))
+  thump.connect(thumpGain).connect(master)
+  thump.start(t)
+  thump.stop(t + 0.1)
+
+  // A small rising blip just after the hit — the "confirmed" lift.
+  const lift = ctx.createOscillator()
+  lift.type = 'sine'
+  const liftStart = t + 0.012
+  lift.frequency.setValueAtTime(rand(520, 580), liftStart)
+  lift.frequency.exponentialRampToValueAtTime(rand(740, 820), liftStart + 0.05)
+  const liftGain = ctx.createGain()
+  liftGain.gain.setValueAtTime(0.0001, liftStart)
+  liftGain.gain.exponentialRampToValueAtTime(rand(0.035, 0.055), liftStart + 0.008)
+  liftGain.gain.exponentialRampToValueAtTime(0.0001, liftStart + 0.07)
+  lift.connect(liftGain).connect(master)
+  lift.start(liftStart)
+  lift.stop(liftStart + 0.09)
 }
 
 function SmoothCaretInput({ value, onChange, onFocus, className, 'aria-label': ariaLabel }) {
@@ -579,6 +643,8 @@ function DomainStatus({ status, subdomain }) {
         <span className="font-medium">{subdomain}</span> is taken
       </span>
     )
+  } else if (status === 'empty-error') {
+    content = <span className="text-rose-600">Pick a name first</span>
   } else {
     content = <span className="text-[var(--muted)]">Claim your domain before it&apos;s taken</span>
   }
@@ -613,6 +679,30 @@ export default function LandingPage() {
     }, 700)
     return () => clearTimeout(id)
   }, [trimmedSubdomain])
+
+  // Clicking "Claim now" with nothing typed nudges the field instead of
+  // silently doing nothing: the pill shakes, its border goes red, and the
+  // status line swaps to a one-off "empty-error" copy — which takes over
+  // from DomainStatus's own idle/checking/available/taken state below.
+  // Clears the moment there's real input, or on its own after a few
+  // seconds either way.
+  const [showEmptyError, setShowEmptyError] = useState(false)
+  const pillShakeControls = useAnimationControls()
+  useEffect(() => {
+    if (trimmedSubdomain) setShowEmptyError(false)
+  }, [trimmedSubdomain])
+  useEffect(() => {
+    if (!showEmptyError) return
+    const id = setTimeout(() => setShowEmptyError(false), 2400)
+    return () => clearTimeout(id)
+  }, [showEmptyError])
+
+  const handleClaimClick = () => {
+    playClaimClick()
+    if (trimmedSubdomain) return
+    setShowEmptyError(true)
+    pillShakeControls.start({ x: [0, -6, 6, -4, 4, 0], transition: { duration: 0.4, ease: EASE } })
+  }
 
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   useEffect(() => {
@@ -736,9 +826,26 @@ export default function LandingPage() {
                     focus ring whenever you moused over a focused field —
                     the ring blinking out under the cursor. The stacked
                     `focus-within:hover:` rule re-asserts the ring on top of
-                    the deeper hover lift so it survives both states. */}
-                <div
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] pl-6 sm:pl-7 pr-1.5 py-1.5 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_4px_10px_-4px_rgba(10,10,10,0.08)] transition-shadow duration-200 ease-out hover:shadow-[0_1px_2px_rgba(10,10,10,0.05),0_6px_16px_-6px_rgba(10,10,10,0.12)] focus-within:shadow-[0_0_0_4px_rgba(10,10,10,0.06),0_4px_10px_-4px_rgba(10,10,10,0.08)] focus-within:hover:shadow-[0_0_0_4px_rgba(10,10,10,0.06),0_6px_16px_-6px_rgba(10,10,10,0.12)]"
+                    the deeper hover lift so it survives both states.
+
+                    Clicking "Claim now" empty reuses that same ring rather
+                    than adding a separate red border — it recolors the
+                    4px focus-within ring to rose and forces it on
+                    regardless of focus (clicking the button keeps
+                    focus-within true anyway, since the button lives inside
+                    this pill, but this covers the case once focus moves
+                    away) — and fires an imperative shake via
+                    pillShakeControls (rather than an `animate` prop driven
+                    off state, so the shake replays on every click even if
+                    showEmptyError was already true from the last one). */}
+                <motion.div
+                  animate={pillShakeControls}
+                  className={cn(
+                    'inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] pl-6 sm:pl-7 pr-1.5 py-1.5 transition-shadow duration-200 ease-out',
+                    showEmptyError
+                      ? 'shadow-[0_0_0_4px_rgba(244,63,94,0.35),0_4px_10px_-4px_rgba(10,10,10,0.08)]'
+                      : 'shadow-[0_1px_2px_rgba(10,10,10,0.04),0_4px_10px_-4px_rgba(10,10,10,0.08)] hover:shadow-[0_1px_2px_rgba(10,10,10,0.05),0_6px_16px_-6px_rgba(10,10,10,0.12)] focus-within:shadow-[0_0_0_4px_rgba(10,10,10,0.06),0_4px_10px_-4px_rgba(10,10,10,0.08)] focus-within:hover:shadow-[0_0_0_4px_rgba(10,10,10,0.06),0_6px_16px_-6px_rgba(10,10,10,0.12)]',
+                  )}
                   style={{ perspective: 500 }}
                 >
                   <div className="relative w-20 sm:w-36" style={{ perspective: 400 }}>
@@ -793,18 +900,50 @@ export default function LandingPage() {
                       a skew) and back to flat with a slight press on tap.
                       Color/bg still animate via the plain Tailwind
                       transition below; framer only owns the transform now,
-                      replacing the old active:scale for that. */}
+                      replacing the old active:scale for that.
+
+                      The glossy-pill treatment on top of that: a soft
+                      ambient shadow lifts the whole button off the field,
+                      kept light so it reads as a lift and not a drop shadow
+                      (folded into the focus-visible ring too, same fix as
+                      the outer pill's shadow — otherwise focus would wipe
+                      the lift instead of adding to it); an inset radial
+                      highlight, biased hard toward the top, reads as a
+                      light source catching a rounded glass/plastic surface;
+                      a light-rim-top / dark-rim-bottom pair of inset
+                      shadows is the bevel that makes it look embossed
+                      rather than flat; and a full all-around inset stroke
+                      (the ring visible tracing the whole capsule in the
+                      reference, not just a top highlight) is what actually
+                      separates the pill's edge from the dark field behind
+                      it. All three overlays are separate
+                      absolutely-positioned layers rather than squeezed into
+                      one background- shorthand, so they don't fight the
+                      plain bg-[var(--primary)] / hover:bg-* color change on
+                      the button itself. */}
                   <motion.button
                     whileHover={{ rotateX: -5, rotateY: 3, y: -1 }}
                     whileTap={{ scale: 0.96, rotateX: 0, rotateY: 0, y: 0 }}
                     transition={{ duration: 0.25, ease: EASE }}
                     style={{ transformStyle: 'preserve-3d' }}
-                    className="rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] text-base sm:text-lg font-medium px-6 sm:px-7 py-3 sm:py-3.5 transition-colors duration-150 ease-out hover:bg-[var(--primary-hover)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_rgba(10,10,10,0.35)] whitespace-nowrap"
+                    onClick={handleClaimClick}
+                    className="relative overflow-hidden rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] text-base sm:text-lg font-medium px-6 sm:px-7 py-3 sm:py-3.5 shadow-[0_1px_2px_rgba(10,10,10,0.2),0_6px_14px_-8px_rgba(10,10,10,0.35)] transition-colors duration-150 ease-out hover:bg-[var(--primary-hover)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_rgba(10,10,10,0.35),0_6px_14px_-8px_rgba(10,10,10,0.35)] whitespace-nowrap"
                   >
-                    Claim now
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(120%_100%_at_50%_-35%,rgba(255,255,255,0.32),rgba(255,255,255,0)_60%)]"
+                    />
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),inset_0_-1.5px_1.5px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(255,255,255,0.22)]"
+                    />
+                    <span className="relative">Claim now</span>
                   </motion.button>
-                </div>
-                <DomainStatus status={availability} subdomain={trimmedSubdomain} />
+                </motion.div>
+                <DomainStatus
+                  status={showEmptyError ? 'empty-error' : availability}
+                  subdomain={trimmedSubdomain}
+                />
               </motion.div>
 
             </div>
