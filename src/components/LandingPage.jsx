@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion'
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from 'framer-motion'
 import { EASE } from '../motion'
+import { cn } from '@/lib/utils'
 import LandingShell from './landing/LandingShell'
 
 const HEADLINE_LINES = [
@@ -252,9 +261,358 @@ function initials(name) {
     .toUpperCase()
 }
 
+// A spring-driven caret for the subdomain field. The native caret is
+// hidden (caretColor: transparent) and a motion.div bar glides to the
+// caret's pixel position instead of jumping + blinking. An invisible
+// <span> mirrors the input's *computed* font so the text before the caret
+// can be measured in px; the input, that span, and the caret bar all stack
+// in one CSS-grid cell so the bar lands exactly on the text. Native scroll
+// is tracked too, since a subdomain routinely overflows this narrow field.
+// Under prefers-reduced-motion the spring is stiff enough to be instant.
+const SMOOTH_CARET_SPRING = { stiffness: 500, damping: 30, mass: 0.5 }
+const SMOOTH_CARET_SPRING_REDUCED = { stiffness: 10000, damping: 100, mass: 0.1 }
+
+// A synthesized keystroke — no audio asset, just Web Audio. Built to read
+// as a mechanical keyboard: three noise bursts through fast attack/decay
+// envelopes — a low-mid "clack" resonance (plate + keycap, ~340 Hz), a
+// crisp high-passed "click" transient for the snap, and a smaller, brighter
+// release tick a beat later (that press/release double-tick is the tell of
+// a real board) — plus a quiet low sine for weight. Only a gentle ~8 kHz
+// lowpass on the master, so the click keeps its edge. Everything jittered
+// per press so a fast run never loops; Backspace is lower, duller, no
+// release tick. The AudioContext is created lazily on the first keystroke
+// — itself a user gesture — so autoplay policy never blocks it.
+let sharedAudioCtx = null
+let sharedNoiseBuffer = null
+
+function getKeystrokeCtx() {
+  if (typeof window === 'undefined') return null
+  const Ctx = window.AudioContext || window.webkitAudioContext
+  if (!Ctx) return null
+  if (!sharedAudioCtx) sharedAudioCtx = new Ctx()
+  if (sharedAudioCtx.state === 'suspended') void sharedAudioCtx.resume()
+  return sharedAudioCtx
+}
+
+function getNoiseBuffer(ctx) {
+  if (sharedNoiseBuffer && sharedNoiseBuffer.sampleRate === ctx.sampleRate) return sharedNoiseBuffer
+  const length = Math.floor(ctx.sampleRate * 0.2)
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate)
+  const data = buffer.getChannelData(0)
+  for (let i = 0; i < length; i += 1) data[i] = Math.random() * 2 - 1
+  sharedNoiseBuffer = buffer
+  return buffer
+}
+
+function playKeystroke({ backspace = false } = {}) {
+  const ctx = getKeystrokeCtx()
+  if (!ctx) return
+  const t = ctx.currentTime
+  const rand = (a, b) => a + Math.random() * (b - a)
+  const noiseBuf = getNoiseBuffer(ctx)
+
+  // Master: kept low, with a top lowpass pulled down just enough to take
+  // the edge off the click and leave it a touch smudged — not so far that
+  // the mechanical snap disappears.
+  const master = ctx.createGain()
+  master.gain.value = backspace ? 0.5 : 0.58
+  const tame = ctx.createBiquadFilter()
+  tame.type = 'lowpass'
+  tame.frequency.value = rand(5200, 6400)
+  tame.Q.value = 0.3
+  master.connect(tame).connect(ctx.destination)
+
+  // One noise burst through a filter with a fast attack/decay envelope.
+  const burst = (type, freq, q, peak, attack, decay, startAt = 0) => {
+    const src = ctx.createBufferSource()
+    src.buffer = noiseBuf
+    const filter = ctx.createBiquadFilter()
+    filter.type = type
+    filter.frequency.value = freq
+    filter.Q.value = q
+    const gain = ctx.createGain()
+    const s = t + startAt
+    gain.gain.setValueAtTime(0.0001, s)
+    gain.gain.exponentialRampToValueAtTime(peak, s + attack)
+    gain.gain.exponentialRampToValueAtTime(0.0001, s + attack + decay)
+    src.connect(filter).connect(gain).connect(master)
+    src.start(s)
+    src.stop(s + attack + decay + 0.02)
+  }
+
+  // 1) Bottom-out "clack" — low-mid noise resonance (plate + keycap).
+  burst('bandpass', backspace ? rand(200, 250) : rand(300, 380), rand(2, 2.8), rand(1.6, 2.4), 0.002, rand(0.035, 0.06))
+  // 2) "Click" transient — the mechanical snap, softened a hair so it reads
+  //    smudged rather than sharp.
+  burst('highpass', rand(2100, 2800), 0.7, rand(0.085, 0.14), 0.0022, rand(0.009, 0.017))
+  // 3) Release tick — smaller, brighter, a beat later. The press/release
+  //    double-tick is what actually reads as a mechanical board.
+  if (!backspace) {
+    burst('highpass', rand(2900, 3700), 0.7, rand(0.03, 0.06), 0.002, rand(0.011, 0.021), rand(0.045, 0.075))
+  }
+
+  // 4) A little low-end weight — quiet, short.
+  const thump = ctx.createOscillator()
+  thump.type = 'sine'
+  thump.frequency.setValueAtTime(rand(115, 145), t)
+  thump.frequency.exponentialRampToValueAtTime(rand(75, 95), t + 0.04)
+  const thumpGain = ctx.createGain()
+  thumpGain.gain.setValueAtTime(0, t)
+  thumpGain.gain.linearRampToValueAtTime(rand(0.06, 0.1), t + 0.004)
+  thumpGain.gain.exponentialRampToValueAtTime(0.0005, t + rand(0.035, 0.055))
+  thump.connect(thumpGain).connect(master)
+  thump.start(t)
+  thump.stop(t + 0.09)
+}
+
+function SmoothCaretInput({ value, onChange, onFocus, className, 'aria-label': ariaLabel }) {
+  const caretX = useMotionValue(0)
+  const caretOpacity = useMotionValue(0)
+  const containerRef = useRef(null)
+  const inputRef = useRef(null)
+  const measureRef = useRef(null)
+  const prefersReducedMotion = useReducedMotion()
+  const springCaretX = useSpring(
+    caretX,
+    prefersReducedMotion ? SMOOTH_CARET_SPRING_REDUCED : SMOOTH_CARET_SPRING,
+  )
+
+  const updateCaret = (target) => {
+    const measureSpan = measureRef.current
+    if (!target || !measureSpan) return
+
+    const styles = window.getComputedStyle(target)
+    measureSpan.style.font = `${styles.fontStyle} ${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`
+    measureSpan.style.letterSpacing = styles.letterSpacing
+
+    const selectionStart = target.selectionStart ?? 0
+    const selectionEnd = target.selectionEnd ?? 0
+    const hasSelection = selectionStart !== selectionEnd
+    const caretIndex =
+      selectionStart === selectionEnd
+        ? selectionStart
+        : target.selectionDirection === 'backward'
+          ? selectionStart
+          : selectionEnd
+
+    measureSpan.textContent = target.value.slice(0, caretIndex)
+    const paddingLeft = parseFloat(styles.paddingLeft) || 0
+    const paddingRight = parseFloat(styles.paddingRight) || 0
+    const absoluteWidth =
+      caretIndex > 0 ? measureSpan.offsetWidth + paddingLeft : paddingLeft - 1
+
+    // Keep the field's own scroll position chasing the caret so it stays
+    // in view once the value is wider than the field.
+    const maxScroll = Math.max(0, target.scrollWidth - target.clientWidth)
+    const visibleRight = target.scrollLeft + target.clientWidth - paddingRight
+    const visibleLeft = target.scrollLeft + paddingLeft
+    if (absoluteWidth > visibleRight) {
+      target.scrollLeft = Math.min(absoluteWidth - target.clientWidth + paddingRight, maxScroll)
+    } else if (absoluteWidth < visibleLeft) {
+      target.scrollLeft = Math.max(0, absoluteWidth - paddingLeft)
+    }
+
+    const caretPosition = absoluteWidth - target.scrollLeft
+    const minX = paddingLeft - 1
+    const maxX = target.clientWidth - paddingRight
+    caretX.set(Math.min(caretPosition, maxX))
+    caretOpacity.set(hasSelection || caretPosition < minX || caretPosition > maxX + 1 ? 0 : 1)
+  }
+
+  const updateCaretRef = useRef(updateCaret)
+  updateCaretRef.current = updateCaret
+
+  const syncIfFocused = () => {
+    const input = inputRef.current
+    if (input && document.activeElement === input) updateCaretRef.current(input)
+  }
+
+  // A soft key-tap sound per printable keystroke (and a duller one for
+  // Backspace). Skipped under prefers-reduced-motion, on auto-repeat, and
+  // for modifier combos / shortcuts; a short min-gap keeps a fast run from
+  // stacking into noise.
+  const lastSoundRef = useRef(0)
+  const onKeyDown = (e) => {
+    if (prefersReducedMotion || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return
+    const isPrintable = typeof e.key === 'string' && e.key.length === 1
+    const isBackspace = e.key === 'Backspace'
+    if (!isPrintable && !isBackspace) return
+    const nowMs = performance.now()
+    if (nowMs - lastSoundRef.current < 22) return
+    lastSoundRef.current = nowMs
+    playKeystroke({ backspace: isBackspace })
+  }
+
+  useEffect(() => {
+    syncIfFocused()
+  }, [value])
+
+  useEffect(() => {
+    const input = inputRef.current
+    const container = containerRef.current
+    if (!input || !container) return
+
+    const onSelectionChange = () => {
+      if (document.activeElement === input) requestAnimationFrame(syncIfFocused)
+    }
+    document.addEventListener('selectionchange', onSelectionChange)
+    input.addEventListener('scroll', syncIfFocused)
+    document.fonts?.addEventListener?.('loadingdone', syncIfFocused)
+    void document.fonts?.ready?.then?.(syncIfFocused)
+    const resizeObserver = new ResizeObserver(syncIfFocused)
+    resizeObserver.observe(container)
+
+    return () => {
+      document.removeEventListener('selectionchange', onSelectionChange)
+      input.removeEventListener('scroll', syncIfFocused)
+      document.fonts?.removeEventListener?.('loadingdone', syncIfFocused)
+      resizeObserver.disconnect()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative grid grid-cols-1 text-base sm:text-lg"
+      style={{ caretColor: 'transparent' }}
+    >
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={(e) => {
+          onChange(e)
+          requestAnimationFrame(syncIfFocused)
+        }}
+        onFocus={(e) => {
+          onFocus?.(e)
+          requestAnimationFrame(syncIfFocused)
+        }}
+        onKeyDown={onKeyDown}
+        onBlur={() => caretOpacity.set(0)}
+        aria-label={ariaLabel}
+        className={cn('col-start-1 row-start-1 w-full bg-transparent outline-none', className)}
+      />
+      <span
+        ref={measureRef}
+        aria-hidden
+        className="pointer-events-none invisible absolute left-0 top-0 whitespace-pre"
+      />
+      <motion.div
+        aria-hidden
+        className="pointer-events-none col-start-1 row-start-1 h-[1.1em] w-0.5 self-center bg-[var(--primary)]"
+        style={{ x: springCaretX, opacity: caretOpacity }}
+      />
+    </div>
+  )
+}
+
+// Handles that resolve as "taken" in the hero's fake availability check —
+// enough real-looking names (plus "shai") that trying a few lands on both
+// outcomes. Everything else comes back available.
+const RESERVED_SUBDOMAINS = new Set([
+  'shai',
+  'admin',
+  'www',
+  'app',
+  'api',
+  'hello',
+  'me',
+  'design',
+  'test',
+  'blog',
+  'portfolio',
+])
+
+// macOS-style dotted spinner — eight dots on a small ring at stepped
+// opacities, the ring rotating in eight discrete steps so the bright dot
+// chases around. Reuses Tailwind's `spin` keyframes (already in the build
+// via animate-spin elsewhere) with a stepped timing function.
+function DottedSpinner({ className }) {
+  return (
+    <span className={cn('relative inline-block size-3', className)} aria-hidden>
+      <span className="absolute inset-0 [animation:spin_0.75s_steps(8,end)_infinite]">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <span
+            key={i}
+            className="absolute left-1/2 top-1/2 size-[2px] rounded-full bg-current"
+            style={{
+              opacity: (i + 1) / 8,
+              transform: `translate(-50%, -50%) rotate(${i * 45}deg) translateY(-4px)`,
+            }}
+          />
+        ))}
+      </span>
+    </span>
+  )
+}
+
+// The line under the subdomain field. Cross-fades (with a small vertical
+// slide) between idle copy, a "checking" state with the spinner, and a
+// green/red resolved state. Keyed on the status name only, so it animates
+// on each state change but not on every keystroke while still "checking".
+const DOMAIN_STATUS_MOTION = {
+  initial: { opacity: 0, y: 4 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -4 },
+  transition: { duration: 0.22, ease: EASE },
+}
+function DomainStatus({ status, subdomain }) {
+  let content
+  if (status === 'checking') {
+    content = (
+      <>
+        <DottedSpinner className="text-[var(--muted)]" />
+        <span className="text-[var(--muted)]">Checking availability…</span>
+      </>
+    )
+  } else if (status === 'available') {
+    content = (
+      <span className="text-emerald-600">
+        <span className="font-medium">{subdomain}</span> is available
+      </span>
+    )
+  } else if (status === 'taken') {
+    content = (
+      <span className="text-rose-600">
+        <span className="font-medium">{subdomain}</span> is taken
+      </span>
+    )
+  } else {
+    content = <span className="text-[var(--muted)]">Claim your domain before it&apos;s taken</span>
+  }
+
+  return (
+    <div className="flex h-5 items-center justify-center text-sm" role="status" aria-live="polite">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key={status} {...DOMAIN_STATUS_MOTION} className="flex items-center gap-1.5">
+          {content}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  )
+}
+
 export default function LandingPage() {
   const [videoLoaded, setVideoLoaded] = useState(false)
   const [subdomain, setSubdomain] = useState('')
+
+  // Fake availability check: debounce the typed handle, flip to "checking"
+  // for ~700ms, then resolve against RESERVED_SUBDOMAINS.
+  const trimmedSubdomain = subdomain.trim()
+  const [availability, setAvailability] = useState('idle')
+  useEffect(() => {
+    if (!trimmedSubdomain) {
+      setAvailability('idle')
+      return
+    }
+    setAvailability('checking')
+    const id = setTimeout(() => {
+      setAvailability(RESERVED_SUBDOMAINS.has(trimmedSubdomain) ? 'taken' : 'available')
+    }, 700)
+    return () => clearTimeout(id)
+  }, [trimmedSubdomain])
 
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   useEffect(() => {
@@ -364,19 +722,31 @@ export default function LandingPage() {
                     buttons since this is the hero's primary CTA. The
                     ".designfolio.me" suffix hides below sm: — at that width
                     it's the least essential part of the row, and dropping it
-                    keeps "Get started" from getting cramped rather than
+                    keeps "Claim now" from getting cramped rather than
                     needing to shrink the button down to an icon. */}
+                {/* The pill sits on the dotted radial-gradient field, and
+                    both it and the dots are drawn in --border on white — so
+                    shadow-sm left it dissolving into the background. A small
+                    contact shadow plus a short, tight ambient one (keyed to
+                    the same rgba(10,10,10) ink the focus ring uses) lifts it
+                    just clear of the dots without reading as a floating
+                    card; hover nudges it a hair deeper.
+                    Tailwind emits `hover:` after `focus-within:`, so a
+                    plain hover shadow (no ring layer) would clobber the
+                    focus ring whenever you moused over a focused field —
+                    the ring blinking out under the cursor. The stacked
+                    `focus-within:hover:` rule re-asserts the ring on top of
+                    the deeper hover lift so it survives both states. */}
                 <div
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] pl-5 sm:pl-6 pr-1 py-1 shadow-sm transition-shadow duration-200 ease-out focus-within:shadow-[0_0_0_4px_rgba(10,10,10,0.06)]"
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] pl-6 sm:pl-7 pr-1.5 py-1.5 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_4px_10px_-4px_rgba(10,10,10,0.08)] transition-shadow duration-200 ease-out hover:shadow-[0_1px_2px_rgba(10,10,10,0.05),0_6px_16px_-6px_rgba(10,10,10,0.12)] focus-within:shadow-[0_0_0_4px_rgba(10,10,10,0.06),0_4px_10px_-4px_rgba(10,10,10,0.08)] focus-within:hover:shadow-[0_0_0_4px_rgba(10,10,10,0.06),0_6px_16px_-6px_rgba(10,10,10,0.12)]"
                   style={{ perspective: 500 }}
                 >
-                  <div className="relative w-16 sm:w-32" style={{ perspective: 400 }}>
-                    <input
-                      type="text"
+                  <div className="relative w-20 sm:w-36" style={{ perspective: 400 }}>
+                    <SmoothCaretInput
                       value={subdomain}
                       onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9- ]/g, ''))}
                       aria-label="Choose your subdomain"
-                      className="w-full bg-transparent py-2 sm:py-2.5 text-sm sm:text-base text-[var(--primary)] outline-none selection:bg-[var(--primary)] selection:text-[var(--primary-foreground)]"
+                      className="py-2.5 sm:py-3 text-base sm:text-lg text-[var(--primary)] selection:bg-[var(--primary)] selection:text-[var(--primary-foreground)]"
                     />
                     {/* Real <input placeholder> can't cross-fade between two
                         strings — this overlay swaps in for it instead,
@@ -399,7 +769,7 @@ export default function LandingPage() {
                             initial="hidden"
                             animate="visible"
                             exit="exit"
-                            className="inline-flex text-sm sm:text-base text-[var(--muted)]"
+                            className="inline-flex text-base sm:text-lg text-[var(--muted)]"
                           >
                             {SUBDOMAIN_PLACEHOLDERS[placeholderIndex].split('').map((ch, i) => (
                               <motion.span
@@ -415,8 +785,8 @@ export default function LandingPage() {
                       </div>
                     )}
                   </div>
-                  <span className="hidden sm:block h-5 w-px bg-[var(--border)]" />
-                  <span className="hidden sm:inline pr-3 text-base text-[var(--muted)]">.designfolio.me</span>
+                  <span className="hidden sm:block h-6 w-px bg-[var(--border)]" />
+                  <span className="hidden sm:inline pr-3 text-lg text-[var(--muted)]">.designfolio.me</span>
                   {/* Very subtle 3D tilt, not a big showy one — a couple
                       degrees of rotateX/rotateY on hover (needs the parent
                       pill's perspective above to read as depth rather than
@@ -429,12 +799,12 @@ export default function LandingPage() {
                     whileTap={{ scale: 0.96, rotateX: 0, rotateY: 0, y: 0 }}
                     transition={{ duration: 0.25, ease: EASE }}
                     style={{ transformStyle: 'preserve-3d' }}
-                    className="rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] text-sm sm:text-base font-medium px-5 sm:px-6 py-2.5 sm:py-3 transition-colors duration-150 ease-out hover:bg-[var(--primary-hover)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_rgba(10,10,10,0.35)] whitespace-nowrap"
+                    className="rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] text-base sm:text-lg font-medium px-6 sm:px-7 py-3 sm:py-3.5 transition-colors duration-150 ease-out hover:bg-[var(--primary-hover)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_rgba(10,10,10,0.35)] whitespace-nowrap"
                   >
-                    Get started
+                    Claim now
                   </motion.button>
                 </div>
-                <p className="text-xs text-[var(--muted)]">Claim your domain before it's taken</p>
+                <DomainStatus status={availability} subdomain={trimmedSubdomain} />
               </motion.div>
 
             </div>
