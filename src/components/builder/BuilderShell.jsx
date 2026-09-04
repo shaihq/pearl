@@ -4,6 +4,7 @@ import { useLocation, useMatch } from 'react-router-dom'
 import { CanvasProvider } from '../../context/CanvasContext'
 import { BuilderPanelProvider } from '../../context/BuilderPanelContext'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import ChatLauncher from './ChatLauncher'
 import InsightsPanel from './InsightsPanel'
 import LeftNav from './LeftNav'
 import RightPanelSheet from './RightPanelSheet'
@@ -339,6 +340,8 @@ export default function BuilderShell({ children }) {
             {renderPanelContent(true)}
           </RightPanelSheet>
         )}
+
+        <ChatLauncher />
       </div>
     </BuilderPanelProvider>
   )
